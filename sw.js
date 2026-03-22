@@ -1,11 +1,10 @@
 // ∞ Infinity Loop — Service Worker
-const CACHE = 'il-v1';
+const CACHE = 'il-v2';
 const STATIC = [
   '/',
   '/index.html',
   '/css/main.css',
   '/css/themes.css',
-  '/js/config.js',
   '/js/db.js',
   '/js/data.js',
   '/js/auth.js',
