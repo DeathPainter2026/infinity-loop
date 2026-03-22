@@ -1,0 +1,66 @@
+/* ===== THEME: HORROR 💀 — Glowing Eyes in the Dark ===== */
+:root {
+  --bg:#050101; --bg1:#090202; --bg2:#0e0303; --bg3:#140404; --bg4:#1a0505;
+  --sidebar-bg:#060202;
+  --topbar-bg:rgba(5,1,1,0.97);
+  --banner-bg:linear-gradient(135deg,rgba(120,0,0,0.28) 0%,rgba(70,0,0,0.2) 100%);
+  --banner-border:rgba(180,0,0,0.22);
+  --border:#270404; --border2:#360606; --border-rgb:39,4,4;
+  --text:#dfc8c0; --muted:#401010; --muted2:#6a2828;
+  --accent:#cc2020; --accent-light:#e06060; --accent-rgb:204,32,32;
+  --accent-glow:rgba(204,32,32,0.4);
+  --accent-bg:rgba(139,0,0,0.1); --accent-border:rgba(204,32,32,0.28);
+  --nav-hover:rgba(139,0,0,0.08); --nav-active:rgba(139,0,0,0.14);
+  --row-hover:rgba(139,0,0,0.045);
+  --c-done:#b71c1c; --c-now:#e53935; --c-plan:#795548; --c-drop:#455a64;
+  --c-done-rgb:183,28,28; --c-now-rgb:229,57,53;
+  --c-plan-rgb:121,85,72; --c-drop-rgb:69,90,100;
+  --danger:#b71c1c; --btn-text:#fff;
+}
+
+/* ─── FOG / VIGNETTE ─── */
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:-2;
+  background:
+    radial-gradient(ellipse 100% 50% at 50% 0%,   rgba(120,0,0,0.18) 0%,transparent 65%),
+    radial-gradient(ellipse 80%  60% at 50% 105%, rgba(60,0,0,0.22)  0%,transparent 55%),
+    radial-gradient(ellipse 50%  80% at 0%   50%, rgba(80,0,0,0.07)  0%,transparent 50%),
+    radial-gradient(ellipse 50%  80% at 100% 50%, rgba(80,0,0,0.07)  0%,transparent 50%);
+}
+
+/* ─── GLOWING EYES IN THE DARK (corner) ─── */
+body::after {
+  content:''; position:fixed; bottom:60px; right:40px;
+  width:280px; height:280px; pointer-events:none; z-index:-1; opacity:0.12;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 280'%3E%3C!-- fog/mist --%3E%3Cellipse cx='140' cy='250' rx='120' ry='30' fill='%23300000' opacity='0.6'/%3E%3C!-- dark silhouette body 1 (main, front) --%3E%3Cellipse cx='140' cy='180' rx='35' ry='55' fill='%23200000'/%3E%3Cellipse cx='140' cy='130' rx='28' ry='32' fill='%23200000'/%3E%3C!-- glowing eyes 1 --%3E%3Cellipse cx='128' cy='125' rx='9'  ry='11' fill='%23ff1111'/%3E%3Cellipse cx='152' cy='125' rx='9'  ry='11' fill='%23ff1111'/%3E%3Cellipse cx='128' cy='125' rx='5'  ry='6'  fill='%23ff6666'/%3E%3Cellipse cx='152' cy='125' rx='5'  ry='6'  fill='%23ff6666'/%3E%3C!-- glow halos --%3E%3Cellipse cx='128' cy='125' rx='14' ry='16' fill='none' stroke='%23ff0000' stroke-width='2' opacity='0.3'/%3E%3Cellipse cx='152' cy='125' rx='14' ry='16' fill='none' stroke='%23ff0000' stroke-width='2' opacity='0.3'/%3E%3C!-- silhouette body 2 (back-left) --%3E%3Cellipse cx='60'  cy='210' rx='22' ry='40' fill='%23180000' opacity='0.8'/%3E%3Cellipse cx='60'  cy='175' rx='18' ry='22' fill='%23180000' opacity='0.8'/%3E%3C!-- glowing eyes 2 --%3E%3Cellipse cx='53'  cy='171' rx='6'  ry='7'  fill='%23cc0000' opacity='0.8'/%3E%3Cellipse cx='67'  cy='171' rx='6'  ry='7'  fill='%23cc0000' opacity='0.8'/%3E%3C!-- silhouette body 3 (back-right) --%3E%3Cellipse cx='220' cy='220' rx='20' ry='36' fill='%23160000' opacity='0.6'/%3E%3Cellipse cx='220' cy='188' rx='16' ry='20' fill='%23160000' opacity='0.6'/%3E%3C!-- glowing eyes 3 --%3E%3Cellipse cx='214' cy='185' rx='5' ry='6' fill='%23aa0000' opacity='0.6'/%3E%3Cellipse cx='226' cy='185' rx='5' ry='6' fill='%23aa0000' opacity='0.6'/%3E%3C!-- tree branches (bare, dark forest) --%3E%3Cline x1='0'   y1='0'  x2='60'  y2='100' stroke='%23200000' stroke-width='6' stroke-linecap='round'/%3E%3Cline x1='60'  y1='100' x2='30' y2='160' stroke='%23200000' stroke-width='4' stroke-linecap='round'/%3E%3Cline x1='60'  y1='100' x2='90' y2='150' stroke='%23200000' stroke-width='3' stroke-linecap='round'/%3E%3Cline x1='280' y1='0'  x2='220' y2='90'  stroke='%23200000' stroke-width='5' stroke-linecap='round'/%3E%3Cline x1='220' y1='90'  x2='250' y2='145' stroke='%23200000' stroke-width='3' stroke-linecap='round'/%3E%3Cline x1='220' y1='90'  x2='195' y2='140' stroke='%23200000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-size:contain;
+}
+
+/* ─── BLOOD DRIP TOP ─── */
+.topbar::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px; pointer-events:none;
+  background:linear-gradient(90deg,#1a0000,#8b0000,#cc2020,#8b0000,#1a0000);
+  box-shadow:0 0 16px rgba(204,32,32,0.6), 0 0 40px rgba(139,0,0,0.3);
+}
+.topbar { position:sticky; }
+
+/* ─── SIDEBAR ─── */
+.sidebar { position:relative; overflow:hidden; }
+.sidebar::after {
+  content:''; position:absolute; top:0; right:0; bottom:0; width:1px; pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(204,32,32,0.35) 40%,rgba(204,32,32,0.35) 60%,transparent);
+}
+/* Skull watermark */
+.sidebar::before {
+  content:''; position:absolute; bottom:100px; left:50%; transform:translateX(-50%);
+  width:80px; height:80px; pointer-events:none; opacity:0.04;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 110'%3E%3Cellipse cx='50' cy='44' rx='38' ry='42' fill='%23cc2020'/%3E%3Cellipse cx='33' cy='48' rx='11' ry='14' fill='%23050101'/%3E%3Cellipse cx='67' cy='48' rx='11' ry='14' fill='%23050101'/%3E%3Crect x='28' y='78' width='13' height='9' rx='3' fill='%23050101'/%3E%3Crect x='44' y='78' width='12' height='9' rx='3' fill='%23050101'/%3E%3Crect x='59' y='78' width='13' height='9' rx='3' fill='%23050101'/%3E%3Crect x='36' y='89' width='11' height='8' rx='3' fill='%23050101'/%3E%3Crect x='53' y='89' width='11' height='8' rx='3' fill='%23050101'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-size:contain;
+}
+
+/* ─── YEAR BANNER ─── */
+.year-banner { position:relative; overflow:hidden; }
+.year-banner::after {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:40px; pointer-events:none;
+  background:linear-gradient(0deg,rgba(60,0,0,0.3) 0%,transparent 100%);
+}

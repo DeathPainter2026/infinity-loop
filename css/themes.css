@@ -1,0 +1,390 @@
+/* ===== INFINITY LOOP — ALL THEMES ===== */
+
+/* ─── SHARED BACKGROUND SETUP ─── */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; bottom: 0;
+  left: 230px; right: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-image: var(--theme-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: var(--theme-bg-opacity, 0.18);
+  filter: var(--theme-bg-filter, none);
+}
+/* Dark overlay so text stays readable */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0; bottom: 0;
+  left: 230px; right: 0;
+  pointer-events: none;
+  z-index: -1;
+  background: var(--theme-overlay, transparent);
+}
+
+/* ══════════════════════════════════════════
+   THEME: CTHULHU 🐙
+══════════════════════════════════════════ */
+body.theme-cthulhu {
+  --bg:#020b0e; --bg1:#031013; --bg2:#041518; --bg3:#061c20; --bg4:#08232a;
+  --sidebar-bg:rgba(2,11,14,0.95); --topbar-bg:rgba(2,11,14,0.9);
+  --banner-bg:linear-gradient(135deg,rgba(0,100,85,0.25) 0%,rgba(0,60,80,0.18) 100%);
+  --banner-border:rgba(0,168,150,0.22);
+  --border:#0b2226; --border2:#0e2c32; --border-rgb:11,34,38;
+  --text:#d8f0ec; --muted:#3a8a88; --muted2:#6ab8b0;
+  --accent:#00a896; --accent-light:#4db6ac; --accent-rgb:0,168,150;
+  --accent-glow:rgba(0,168,150,0.45); --accent-bg:rgba(0,168,150,0.08); --accent-border:rgba(0,168,150,0.3);
+  --nav-hover:rgba(0,168,150,0.06); --nav-active:rgba(0,168,150,0.12); --row-hover:rgba(0,168,150,0.035);
+  --c-done:#26a69a; --c-now:#42a5f5; --c-plan:#7e57c2; --c-drop:#ef5350;
+  --c-done-rgb:38,166,154; --c-now-rgb:66,165,245; --c-plan-rgb:126,87,194; --c-drop-rgb:239,83,80;
+  --danger:#c62828; --btn-text:#001614;
+  --bg1-rgb:3,16,19;
+  --theme-font: 'Cinzel', serif;
+  --theme-bg-image: url('../img/bg-cthulhu.png');
+  --theme-bg-opacity: 0.75;
+  --theme-overlay: linear-gradient(135deg, rgba(2,11,14,0.55) 0%, rgba(2,11,14,0.35) 100%);
+  --bg1-rgb:3,16,19; --bg2-rgb:4,21,24;
+}
+body.theme-cthulhu .logo-name,
+body.theme-cthulhu .tb-title,
+body.theme-cthulhu .yb-title,
+body.theme-cthulhu .modal-ttl { font-family: 'Cinzel', serif; }
+body.theme-cthulhu .sidebar::after {
+  content:''; position:absolute; top:0; right:0; bottom:0; width:1px; pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(0,168,150,0.5) 30%,rgba(0,168,150,0.5) 70%,transparent);
+}
+body.theme-cthulhu .year-banner { position:relative; overflow:hidden; }
+body.theme-cthulhu .year-banner::after {
+  content:'ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ'; position:absolute; right:16px; top:50%; transform:translateY(-50%);
+  font-size:14px; letter-spacing:6px; opacity:0.12; pointer-events:none; color:var(--accent); white-space:nowrap;
+}
+
+
+/* ══════════════════════════════════════════
+   THEME: CLASSIC / ФАНТАСТИКА 🌌
+══════════════════════════════════════════ */
+body.theme-classic {
+  --bg:#06080f; --bg1:#080b16; --bg2:#0d1220; --bg3:#12192e; --bg4:#172138;
+  --sidebar-bg:rgba(6,8,15,0.95); --topbar-bg:rgba(6,8,15,0.9);
+  --banner-bg:linear-gradient(135deg,rgba(79,70,229,0.14) 0%,rgba(139,92,246,0.09) 100%);
+  --banner-border:rgba(99,102,241,0.22);
+  --border:#16203e; --border2:#1c2a50; --border-rgb:22,32,62;
+  --text:#e8f0ff; --muted:#4a5898; --muted2:#8898e0;
+  --accent:#818cf8; --accent-light:#a5b4fc; --accent-rgb:129,140,248;
+  --accent-glow:rgba(129,140,248,0.38); --accent-bg:rgba(99,102,241,0.1); --accent-border:rgba(99,102,241,0.32);
+  --nav-hover:rgba(99,102,241,0.06); --nav-active:rgba(99,102,241,0.12); --row-hover:rgba(99,102,241,0.035);
+  --c-done:#34d399; --c-now:#60a5fa; --c-plan:#a78bfa; --c-drop:#f87171;
+  --c-done-rgb:52,211,153; --c-now-rgb:96,165,250; --c-plan-rgb:167,139,250; --c-drop-rgb:248,113,113;
+  --danger:#ef4444; --btn-text:#fff;
+  --bg1-rgb:8,11,22;
+  --theme-font: 'Orbitron', sans-serif;
+  --theme-bg-image: url('../img/bg-classic.jpg');
+  --theme-bg-opacity: 0.75;
+  --theme-overlay: linear-gradient(135deg, rgba(6,8,15,0.5) 0%, rgba(6,8,15,0.3) 100%);
+  --bg1-rgb:8,11,22; --bg2-rgb:13,18,32;
+}
+body.theme-classic .logo-name,
+body.theme-classic .tb-title,
+body.theme-classic .yb-title,
+body.theme-classic .modal-ttl { font-family: 'Orbitron', sans-serif; letter-spacing:1px; }
+body.theme-classic .sidebar::after {
+  content:''; position:absolute; top:0; right:0; bottom:0; width:1px; pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(129,140,248,0.4) 35%,rgba(129,140,248,0.4) 65%,transparent);
+}
+body.theme-classic .year-banner { position:relative; overflow:hidden; }
+body.theme-classic .year-banner::after {
+  content:'★ ✦ ✧ ✦ ★ ✦ ✧ ✦ ★'; position:absolute; right:20px; top:50%; transform:translateY(-50%);
+  font-size:14px; letter-spacing:8px; opacity:0.1; pointer-events:none; color:var(--accent); white-space:nowrap;
+}
+
+
+/* ══════════════════════════════════════════
+   THEME: CYBERPUNK ⚡
+══════════════════════════════════════════ */
+body.theme-cyberpunk {
+  --bg:#03020a; --bg1:#05040e; --bg2:#080618; --bg3:#0b0820; --bg4:#100c28;
+  --sidebar-bg:rgba(3,2,10,0.95); --topbar-bg:rgba(3,2,10,0.9);
+  --banner-bg:linear-gradient(135deg,rgba(224,64,251,0.12) 0%,rgba(0,229,255,0.08) 100%);
+  --banner-border:rgba(224,64,251,0.3);
+  --border:#190730; --border2:#240c42; --border-rgb:25,7,48;
+  --text:#faf0ff; --muted:#6828aa; --muted2:#c070f0;
+  --accent:#e040fb; --accent-light:#f06cff; --accent-rgb:224,64,251;
+  --accent-glow:rgba(224,64,251,0.5); --accent-bg:rgba(224,64,251,0.08); --accent-border:rgba(224,64,251,0.32);
+  --nav-hover:rgba(224,64,251,0.07); --nav-active:rgba(224,64,251,0.13); --row-hover:rgba(224,64,251,0.04);
+  --c-done:#00e5ff; --c-now:#e040fb; --c-plan:#69ff47; --c-drop:#ff1744;
+  --c-done-rgb:0,229,255; --c-now-rgb:224,64,251; --c-plan-rgb:105,255,71; --c-drop-rgb:255,23,68;
+  --danger:#ff1744; --btn-text:#0a0015;
+  --bg1-rgb:5,4,14;
+  --theme-font: 'Share Tech Mono', monospace;
+  --theme-bg-image: url('../img/bg-cyberpunk.jpg');
+  --theme-bg-opacity: 0.78;
+  --theme-overlay: linear-gradient(135deg, rgba(3,2,10,0.5) 0%, rgba(3,2,10,0.3) 100%);
+  --bg1-rgb:5,4,14; --bg2-rgb:8,6,24;
+}
+body.theme-cyberpunk .logo-name,
+body.theme-cyberpunk .tb-title,
+body.theme-cyberpunk .yb-title,
+body.theme-cyberpunk .modal-ttl { font-family: 'Share Tech Mono', monospace; letter-spacing:2px; }
+body.theme-cyberpunk .topbar { position:sticky; }
+body.theme-cyberpunk .topbar::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px; pointer-events:none;
+  background:linear-gradient(90deg,transparent,#00e5ff 25%,#e040fb 50%,#f9e200 75%,transparent);
+  box-shadow:0 0 10px #e040fb; animation:neon-pulse 4s ease-in-out infinite;
+}
+@keyframes neon-pulse { 0%,100%{opacity:0.55} 50%{opacity:1} }
+body.theme-cyberpunk .sidebar::after {
+  content:'ア イ ウ カ キ ク サ シ ス タ チ ツ ナ ニ ヌ';
+  position:absolute; top:0; left:5px; bottom:0; pointer-events:none;
+  font-size:9px; line-height:2.2; color:#e040fb; opacity:0.06;
+  writing-mode:vertical-rl; overflow:hidden; white-space:nowrap;
+}
+body.theme-cyberpunk .year-banner { position:relative; overflow:hidden; }
+body.theme-cyberpunk .year-banner::after {
+  content:'ARASAKA // MILITECH // KANG TAO'; position:absolute; right:16px; top:50%; transform:translateY(-50%);
+  font-size:9px; letter-spacing:3px; opacity:0.1; pointer-events:none;
+  color:#00e5ff; white-space:nowrap; font-family:'Share Tech Mono',monospace;
+}
+
+
+/* ══════════════════════════════════════════
+   THEME: HORROR 💀
+══════════════════════════════════════════ */
+body.theme-horror {
+  --bg:#050101; --bg1:#090202; --bg2:#0e0303; --bg3:#140404; --bg4:#1a0505;
+  --sidebar-bg:rgba(5,1,1,0.95); --topbar-bg:rgba(5,1,1,0.9);
+  --banner-bg:linear-gradient(135deg,rgba(120,0,0,0.28) 0%,rgba(70,0,0,0.2) 100%);
+  --banner-border:rgba(180,0,0,0.22);
+  --border:#270404; --border2:#360606; --border-rgb:39,4,4;
+  --text:#ffe8e0; --muted:#803030; --muted2:#c06060;
+  --accent:#cc2020; --accent-light:#e06060; --accent-rgb:204,32,32;
+  --accent-glow:rgba(204,32,32,0.4); --accent-bg:rgba(139,0,0,0.1); --accent-border:rgba(204,32,32,0.28);
+  --nav-hover:rgba(139,0,0,0.08); --nav-active:rgba(139,0,0,0.14); --row-hover:rgba(139,0,0,0.045);
+  --c-done:#b71c1c; --c-now:#e53935; --c-plan:#795548; --c-drop:#455a64;
+  --c-done-rgb:183,28,28; --c-now-rgb:229,57,53; --c-plan-rgb:121,85,72; --c-drop-rgb:69,90,100;
+  --danger:#b71c1c; --btn-text:#fff;
+  --bg1-rgb:9,2,2;
+  --theme-font: 'Raleway', sans-serif;
+  --theme-bg-image: url('../img/bg-horror.jpg');
+  --theme-bg-opacity: 0.78;
+  --theme-overlay: linear-gradient(135deg, rgba(5,1,1,0.48) 0%, rgba(5,1,1,0.28) 100%);
+  --bg1-rgb:9,2,2; --bg2-rgb:14,3,3;
+}
+body.theme-horror .topbar { position:sticky; }
+body.theme-horror .topbar::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px; pointer-events:none;
+  background:linear-gradient(90deg,#1a0000,#8b0000,#cc2020,#8b0000,#1a0000);
+  box-shadow:0 0 16px rgba(204,32,32,0.6);
+}
+body.theme-horror .sidebar::after {
+  content:''; position:absolute; top:0; right:0; bottom:0; width:1px; pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(204,32,32,0.35) 40%,rgba(204,32,32,0.35) 60%,transparent);
+}
+body.theme-horror .sidebar::before {
+  content:'💀'; position:absolute; bottom:140px; left:50%;
+  transform:translateX(-50%); font-size:48px; opacity:0.06;
+  pointer-events:none; user-select:none; line-height:1;
+}
+
+
+/* ══════════════════════════════════════════
+   THEME: ANIME 🌸 (Happy / Fairy Tail)
+══════════════════════════════════════════ */
+body.theme-anime {
+  --bg:#070510; --bg1:#0c0818; --bg2:#110b22; --bg3:#150e2a; --bg4:#1a1235;
+  --sidebar-bg:rgba(7,5,16,0.95); --topbar-bg:rgba(7,5,16,0.9);
+  --banner-bg:linear-gradient(135deg,rgba(233,30,99,0.12) 0%,rgba(156,39,176,0.09) 50%,rgba(255,152,0,0.06) 100%);
+  --banner-border:rgba(233,30,99,0.22);
+  --border:#1e0c2e; --border2:#281240; --border-rgb:30,12,46;
+  --text:#fff0fc; --muted:#782898; --muted2:#d090e0;
+  --accent:#e91e8c; --accent-light:#f472b6; --accent-rgb:233,30,140;
+  --accent-glow:rgba(233,30,140,0.45); --accent-bg:rgba(233,30,140,0.08); --accent-border:rgba(233,30,140,0.3);
+  --nav-hover:rgba(233,30,140,0.07); --nav-active:rgba(233,30,140,0.13); --row-hover:rgba(233,30,140,0.04);
+  --c-done:#ab47bc; --c-now:#f48fb1; --c-plan:#ffb74d; --c-drop:#78909c;
+  --c-done-rgb:171,71,188; --c-now-rgb:244,143,177; --c-plan-rgb:255,183,77; --c-drop-rgb:120,144,156;
+  --danger:#c2185b; --btn-text:#fff;
+  --bg1-rgb:12,8,24;
+  --theme-font: 'M PLUS Rounded 1c', sans-serif;
+  --theme-bg-image: url('../img/bg-anime.jpg');
+  --theme-bg-opacity: 0.72;
+  --theme-overlay: linear-gradient(135deg, rgba(7,5,16,0.52) 0%, rgba(7,5,16,0.32) 100%);
+  --bg1-rgb:12,8,24; --bg2-rgb:17,11,34;
+}
+body.theme-anime .logo-name,
+body.theme-anime .tb-title,
+body.theme-anime .yb-title,
+body.theme-anime .modal-ttl { font-family: 'M PLUS Rounded 1c', sans-serif; font-weight:700; }
+body.theme-anime .sidebar::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px; pointer-events:none;
+  background:linear-gradient(90deg,transparent,#e91e8c,#ab47bc,transparent);
+}
+body.theme-anime .sidebar::after {
+  content:''; position:absolute; top:0; right:0; bottom:0; width:1px; pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(233,30,140,0.35) 40%,rgba(233,30,140,0.35) 60%,transparent);
+}
+body.theme-anime .year-banner { position:relative; overflow:hidden; }
+body.theme-anime .year-banner::after {
+  content:'映 画'; position:absolute; right:24px; top:50%; transform:translateY(-50%);
+  font-size:46px; opacity:0.07; pointer-events:none; color:var(--accent); font-family:serif; letter-spacing:8px;
+}
+
+
+/* ══════════════════════════════════════════
+   THEME: SAMURAI ⚔️
+══════════════════════════════════════════ */
+body.theme-samurai {
+  --bg:#0e0a06; --bg1:#140e08; --bg2:#1c1209; --bg3:#24180c; --bg4:#2e1f10;
+  --sidebar-bg:rgba(14,10,6,0.96); --topbar-bg:rgba(14,10,6,0.9);
+  --banner-bg:linear-gradient(135deg,rgba(160,20,20,0.2) 0%,rgba(80,10,10,0.15) 100%);
+  --banner-border:rgba(180,40,40,0.25);
+  --border:#2a1508; --border2:#3a1e0a; --border-rgb:42,21,8;
+  --text:#fff5e8; --muted:#aa7038; --muted2:#d09858;
+  --accent:#c8381a; --accent-light:#e86040; --accent-rgb:200,56,26;
+  --accent-glow:rgba(200,56,26,0.4); --accent-bg:rgba(200,56,26,0.08); --accent-border:rgba(200,56,26,0.3);
+  --nav-hover:rgba(200,56,26,0.06); --nav-active:rgba(200,56,26,0.12); --row-hover:rgba(200,56,26,0.035);
+  --c-done:#d4a017; --c-now:#c8381a; --c-plan:#8b7355; --c-drop:#607080;
+  --c-done-rgb:212,160,23; --c-now-rgb:200,56,26; --c-plan-rgb:139,115,85; --c-drop-rgb:96,112,128;
+  --danger:#b71c1c; --btn-text:#fff;
+  --bg1-rgb:20,14,8;
+  --theme-font: 'Shippori Mincho', serif;
+  --theme-bg-image: url('../img/bg-samurai.jpg');
+  --theme-bg-opacity: 0.78;
+  --theme-overlay: linear-gradient(135deg, rgba(14,10,6,0.5) 0%, rgba(14,10,6,0.28) 100%);
+  --bg1-rgb:20,14,8; --bg2-rgb:28,18,9;
+}
+body.theme-samurai .logo-name,
+body.theme-samurai .tb-title,
+body.theme-samurai .yb-title,
+body.theme-samurai .modal-ttl { font-family: 'Shippori Mincho', serif; font-weight:700; letter-spacing:2px; }
+body.theme-samurai .sidebar::after {
+  content:''; position:absolute; top:0; right:0; bottom:0; width:1px; pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(200,56,26,0.45) 40%,rgba(200,56,26,0.45) 60%,transparent);
+}
+body.theme-samurai .year-banner { position:relative; overflow:hidden; }
+body.theme-samurai .year-banner::after {
+  content:'刀 侍 桜'; position:absolute; right:20px; top:50%; transform:translateY(-50%);
+  font-size:28px; letter-spacing:12px; opacity:0.1; pointer-events:none;
+  color:var(--accent); font-family:'Shippori Mincho',serif;
+}
+body.theme-samurai .topbar { position:sticky; }
+body.theme-samurai .topbar::before {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:1px; pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(200,56,26,0.5),transparent);
+}
+
+
+/* ══════════════════════════════════════════
+   THEME: ANIME 2 🔥 (Dark Fighter)
+══════════════════════════════════════════ */
+body.theme-anime2 {
+  --bg:#060408; --bg1:#0a060e; --bg2:#0f0916; --bg3:#150c1e; --bg4:#1c1028;
+  --sidebar-bg:rgba(6,4,8,0.96); --topbar-bg:rgba(6,4,8,0.9);
+  --banner-bg:linear-gradient(135deg,rgba(255,140,0,0.12) 0%,rgba(30,100,200,0.1) 100%);
+  --banner-border:rgba(255,140,0,0.25);
+  --border:#1e1030; --border2:#2a1840; --border-rgb:30,16,48;
+  --text:#fff8d8; --muted:#684898; --muted2:#b898e8;
+  --accent:#ff8c00; --accent-light:#ffb347; --accent-rgb:255,140,0;
+  --accent-glow:rgba(255,140,0,0.45); --accent-bg:rgba(255,140,0,0.08); --accent-border:rgba(255,140,0,0.3);
+  --nav-hover:rgba(255,140,0,0.06); --nav-active:rgba(255,140,0,0.12); --row-hover:rgba(255,140,0,0.035);
+  --c-done:#1e90ff; --c-now:#ff8c00; --c-plan:#da70d6; --c-drop:#ff4444;
+  --c-done-rgb:30,144,255; --c-now-rgb:255,140,0; --c-plan-rgb:218,112,214; --c-drop-rgb:255,68,68;
+  --danger:#ff2020; --btn-text:#000;
+  --bg1-rgb:10,6,14;
+  --theme-font: 'Rajdhani', sans-serif;
+  --theme-bg-image: url('../img/bg-anime2.jpg');
+  --theme-bg-opacity: 0.75;
+  --theme-overlay: linear-gradient(135deg, rgba(6,4,8,0.5) 0%, rgba(6,4,8,0.3) 100%);
+  --bg1-rgb:10,6,14; --bg2-rgb:15,9,22;
+}
+body.theme-anime2 .logo-name,
+body.theme-anime2 .tb-title,
+body.theme-anime2 .yb-title,
+body.theme-anime2 .modal-ttl { font-family: 'Rajdhani', sans-serif; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
+body.theme-anime2 .sidebar::after {
+  content:''; position:absolute; top:0; right:0; bottom:0; width:1px; pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(255,140,0,0.5) 30%,rgba(30,144,255,0.5) 70%,transparent);
+}
+body.theme-anime2 .year-banner { position:relative; overflow:hidden; }
+body.theme-anime2 .year-banner::after {
+  content:'斬 魄 刀'; position:absolute; right:20px; top:50%; transform:translateY(-50%);
+  font-size:28px; letter-spacing:12px; opacity:0.1; pointer-events:none;
+  color:var(--accent); font-family:serif;
+}
+body.theme-anime2 .topbar { position:sticky; }
+body.theme-anime2 .topbar::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px; pointer-events:none;
+  background:linear-gradient(90deg,transparent,#ff8c00 30%,#1e90ff 70%,transparent);
+  box-shadow:0 0 12px rgba(255,140,0,0.5);
+}
+
+
+/* ══════════════════════════════════════════
+   LIGHT MODE (last — highest specificity)
+══════════════════════════════════════════ */
+body.theme-cthulhu.light-mode,
+body.theme-classic.light-mode,
+body.theme-cyberpunk.light-mode,
+body.theme-horror.light-mode,
+body.theme-anime.light-mode,
+body.theme-samurai.light-mode,
+body.theme-anime2.light-mode {
+  --bg:#f0ede6; --bg1:#ffffff; --bg2:#f5f2eb; --bg3:#ebe7de; --bg4:#e0dbd0;
+  --border:#d5cfc3; --border2:#c8c0b0; --border-rgb:213,207,195;
+  --text:#1a1510; --muted:#9a8f7a; --muted2:#5a4f3a;
+  --topbar-bg:rgba(240,237,230,0.96); --sidebar-bg:rgba(14,10,6,0.97);
+  --theme-bg-opacity: 0.72;
+  --theme-overlay: linear-gradient(135deg, rgba(240,237,230,0.38) 0%, rgba(240,237,230,0.22) 100%);
+}
+body.light-mode .sidebar { background:rgba(14,10,6,0.97) !important; }
+body.light-mode .sidebar .nav-sec-label { color:#4a3820 !important; }
+body.light-mode .sidebar .nav-item { color:#8a7050 !important; }
+body.light-mode .sidebar .nav-item:hover { color:var(--accent) !important; background:rgba(var(--accent-rgb),0.1) !important; }
+body.light-mode .sidebar .nav-item.active { color:var(--accent) !important; background:rgba(var(--accent-rgb),0.15) !important; border-left-color:var(--accent) !important; }
+body.light-mode .sidebar .logo-name, body.light-mode .sidebar .logo-mark { color:var(--accent) !important; }
+body.light-mode .sidebar .logo-tagline, body.light-mode .sidebar .nav-sec-label { color:#4a3820 !important; }
+body.light-mode .sidebar .user-name-disp { color:#c9a84c !important; }
+body.light-mode .sidebar .user-role-disp, body.light-mode .sidebar .icon-btn { color:#5a4020 !important; }
+body.light-mode .sidebar .t-btn { background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.15); }
+body.light-mode .sidebar .t-btn.active { border-color:var(--accent); background:var(--accent-bg); }
+body.light-mode .sidebar .ni-badge { background:rgba(255,255,255,0.08)!important; border-color:rgba(255,255,255,0.15)!important; color:#6a5030!important; }
+
+/* Light mode explicit overrides for content areas */
+body.light-mode .table-wrap { background: rgba(255,255,255,0.68) !important; }
+body.light-mode .an-card,
+body.light-mode .kpi { background: rgba(255,255,255,0.68) !important; }
+body.light-mode .year-banner { background: rgba(255,255,255,0.60) !important; }
+body.light-mode .media-card { background: rgba(255,255,255,0.8) !important; }
+body.light-mode .t-head { background: rgba(245,242,235,0.75) !important; }
+body.light-mode .t-row:hover { background: rgba(0,0,0,0.03) !important; }
+body.light-mode .modal-box { background: rgba(255,255,255,0.97) !important; }
+body.light-mode .login-box { background: rgba(255,255,255,0.95) !important; }
+
+
+/* Theme select always dark */
+.theme-select { color-scheme: dark; }
+.theme-switcher-wrap .nav-sec-label { color: var(--muted2) !important; }
+
+/* ===== GLOBAL TEXT BRIGHTNESS ===== */
+/* Dark themes - boost text */
+body:not(.light-mode) .td-name-main,
+body:not(.light-mode) .m-name,
+body:not(.light-mode) .manage-item-name { color: rgba(255,255,255,0.92) !important; }
+
+body:not(.light-mode) .td-mono,
+body:not(.light-mode) .imdb-v,
+body:not(.light-mode) .mc-meta,
+body:not(.light-mode) .kpi-hint,
+body:not(.light-mode) .leg-hours { color: rgba(255,255,255,0.55) !important; }
+
+/* Light theme - darker text */
+body.light-mode .td-name-main { color: #111 !important; }
+body.light-mode .td-mono,
+body.light-mode .imdb-v,
+body.light-mode .kpi-hint { color: #444 !important; }
+body.light-mode .kpi-lbl,
+body.light-mode .an-ttl { color: #666 !important; }
+body.light-mode .g-tag { color: #333 !important; background: rgba(0,0,0,0.07) !important; border-color: rgba(0,0,0,0.15) !important; }
+body.light-mode .th { color: #555 !important; }

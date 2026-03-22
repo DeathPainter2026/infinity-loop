@@ -1,0 +1,52 @@
+/* ===== THEME: LIGHT ☀️ — Clean Parchment ===== */
+:root {
+  --bg:  #f4f1eb; --bg1: #fff; --bg2: #f8f5ef; --bg3: #f0ece3; --bg4: #e8e3d8;
+  --sidebar-bg: #1c1810;
+  --topbar-bg: rgba(244,241,235,0.94);
+  --banner-bg: linear-gradient(135deg, rgba(120,80,20,0.08) 0%, rgba(80,50,10,0.05) 100%);
+  --banner-border: rgba(160,110,40,0.2);
+  --border: #ddd8cc; --border2: #ccc5b5; --border-rgb: 221,216,204;
+  --text: #2a2018; --muted: #a09070; --muted2: #705a38;
+  --accent: #7c5a1e; --accent-light: #a07835; --accent-rgb: 124,90,30;
+  --accent-glow: rgba(124,90,30,0.3); --accent-bg: rgba(124,90,30,0.07); --accent-border: rgba(124,90,30,0.25);
+  --nav-hover: rgba(124,90,30,0.05); --nav-active: rgba(124,90,30,0.1); --row-hover: rgba(124,90,30,0.03);
+  --c-done: #2e7d32; --c-now: #1565c0; --c-plan: #6a1b9a; --c-drop: #c62828;
+  --c-done-rgb: 46,125,50; --c-now-rgb: 21,101,192; --c-plan-rgb: 106,27,154; --c-drop-rgb: 198,40,40;
+  --danger: #c62828; --btn-text: #fff;
+}
+/* Sidebar is dark (like a bookshelf) */
+.sidebar { background: #1c1810 !important; }
+.sidebar .nav-sec-label { color: #5a4a30 !important; }
+.sidebar .nav-item { color: #8a7050 !important; }
+.sidebar .nav-item:hover { background: rgba(200,160,80,0.1) !important; color: #d4aa60 !important; }
+.sidebar .nav-item.active { background: rgba(200,160,80,0.15) !important; color: #d4aa60 !important; border-left-color: #c9a84c !important; }
+.sidebar .ni-badge { background: rgba(255,255,255,0.05) !important; border-color: rgba(255,255,255,0.1) !important; color: #6a5a40 !important; }
+.sidebar .nav-item.active .ni-badge { color: #c9a84c !important; }
+.sidebar .logo-name { color: #c9a84c !important; }
+.sidebar .logo-tagline { color: #5a4a30 !important; }
+.sidebar .logo-mark { color: #c9a84c !important; }
+.sidebar .user-name-disp { color: #d4aa60 !important; }
+.sidebar .user-role-disp { color: #5a4a30 !important; }
+.sidebar .icon-btn { color: #5a4a30 !important; }
+.sidebar .theme-btns .t-btn { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+.sidebar .theme-btns .t-btn.active { border-color: #c9a84c; background: rgba(201,168,76,0.15); }
+.sidebar .theme-switcher-wrap .nav-sec-label { color: #5a4a30 !important; }
+.sidebar .orb-done { background: #4caf50; }
+.sidebar .orb-now  { background: #2196f3; }
+.sidebar .orb-plan { background: #9c27b0; }
+.sidebar .orb-drop { background: #f44336; }
+
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 600px 400px at 80% 10%, rgba(200,160,80,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 400px 600px at 10% 90%, rgba(160,110,40,0.04) 0%, transparent 60%);
+}
+.login-tentacles {
+  background: radial-gradient(ellipse 500px 400px at 50% 50%, rgba(124,90,30,0.08) 0%, transparent 60%);
+}
+/* Override login box for light */
+.login-box { background: #fff !important; border-color: #ddd8cc !important; }
+.login-symbol, .login-title { color: #7c5a1e !important; }
+.lf-input { background: #f8f5ef !important; border-color: #ddd8cc !important; color: #2a2018 !important; }
+.lf-btn { background: #7c5a1e !important; }

@@ -1,0 +1,82 @@
+/* ===== THEME: CLASSIC 🌑 — Deep Space / Nebula ===== */
+:root {
+  --bg:#06080f; --bg1:#080b16; --bg2:#0d1220; --bg3:#12192e; --bg4:#172138;
+  --sidebar-bg:#07090f;
+  --topbar-bg:rgba(6,8,15,0.96);
+  --banner-bg:linear-gradient(135deg,rgba(79,70,229,0.14) 0%,rgba(139,92,246,0.09) 100%);
+  --banner-border:rgba(99,102,241,0.22);
+  --border:#16203e; --border2:#1c2a50; --border-rgb:22,32,62;
+  --text:#ccd6ff; --muted:#2c3668; --muted2:#5260a0;
+  --accent:#818cf8; --accent-light:#a5b4fc; --accent-rgb:129,140,248;
+  --accent-glow:rgba(129,140,248,0.38);
+  --accent-bg:rgba(99,102,241,0.1); --accent-border:rgba(99,102,241,0.32);
+  --nav-hover:rgba(99,102,241,0.06); --nav-active:rgba(99,102,241,0.12);
+  --row-hover:rgba(99,102,241,0.035);
+  --c-done:#34d399; --c-now:#60a5fa; --c-plan:#a78bfa; --c-drop:#f87171;
+  --c-done-rgb:52,211,153; --c-now-rgb:96,165,250;
+  --c-plan-rgb:167,139,250; --c-drop-rgb:248,113,113;
+  --danger:#ef4444; --btn-text:#fff;
+}
+
+/* ─── DEEP SPACE BACKGROUND ─── */
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:-2;
+  background:
+    radial-gradient(ellipse 700px 700px at -5% 10%,  rgba(99,102,241,0.09) 0%,transparent 60%),
+    radial-gradient(ellipse 600px 600px at 105% 80%, rgba(139,92,246,0.06) 0%,transparent 60%),
+    radial-gradient(ellipse 900px 400px at 50% 110%, rgba(59,130,246,0.05) 0%,transparent 50%),
+    radial-gradient(ellipse 400px 300px at 30% 50%,  rgba(167,139,250,0.04) 0%,transparent 40%);
+}
+
+/* ─── STAR FIELD ─── */
+body::after {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:-1;
+  background-image:
+    /* bright stars */
+    radial-gradient(circle 2px   at 8%   9%,  rgba(255,255,255,0.85) 0%,transparent 100%),
+    radial-gradient(circle 1.5px at 19%  3%,  rgba(200,210,255,0.7)  0%,transparent 100%),
+    radial-gradient(circle 2.5px at 37%  7%,  rgba(255,255,255,0.9)  0%,transparent 100%),
+    radial-gradient(circle 1.5px at 54%  2%,  rgba(180,200,255,0.65) 0%,transparent 100%),
+    radial-gradient(circle 2px   at 71%  11%, rgba(255,255,255,0.8)  0%,transparent 100%),
+    radial-gradient(circle 1px   at 88%  5%,  rgba(200,200,255,0.6)  0%,transparent 100%),
+    radial-gradient(circle 2px   at 93%  18%, rgba(255,255,255,0.75) 0%,transparent 100%),
+    /* medium stars */
+    radial-gradient(circle 1.5px at 5%   28%, rgba(255,255,255,0.55) 0%,transparent 100%),
+    radial-gradient(circle 1px   at 14%  40%, rgba(200,210,255,0.5)  0%,transparent 100%),
+    radial-gradient(circle 2px   at 28%  33%, rgba(255,255,255,0.6)  0%,transparent 100%),
+    radial-gradient(circle 1px   at 43%  45%, rgba(180,200,255,0.45) 0%,transparent 100%),
+    radial-gradient(circle 1.5px at 62%  38%, rgba(255,255,255,0.55) 0%,transparent 100%),
+    radial-gradient(circle 1px   at 77%  42%, rgba(200,200,255,0.5)  0%,transparent 100%),
+    radial-gradient(circle 2px   at 85%  30%, rgba(255,255,255,0.65) 0%,transparent 100%),
+    radial-gradient(circle 1px   at 96%  47%, rgba(180,200,255,0.4)  0%,transparent 100%),
+    /* dim stars */
+    radial-gradient(circle 1px   at 11%  58%, rgba(255,255,255,0.4)  0%,transparent 100%),
+    radial-gradient(circle 1.5px at 23%  65%, rgba(200,210,255,0.45) 0%,transparent 100%),
+    radial-gradient(circle 1px   at 38%  70%, rgba(255,255,255,0.35) 0%,transparent 100%),
+    radial-gradient(circle 2px   at 55%  62%, rgba(180,200,255,0.5)  0%,transparent 100%),
+    radial-gradient(circle 1px   at 69%  75%, rgba(255,255,255,0.3)  0%,transparent 100%),
+    radial-gradient(circle 1.5px at 81%  68%, rgba(200,200,255,0.45) 0%,transparent 100%),
+    radial-gradient(circle 1px   at 91%  78%, rgba(255,255,255,0.35) 0%,transparent 100%),
+    radial-gradient(circle 1px   at 6%   84%, rgba(180,200,255,0.4)  0%,transparent 100%),
+    radial-gradient(circle 1.5px at 31%  88%, rgba(255,255,255,0.45) 0%,transparent 100%),
+    radial-gradient(circle 1px   at 48%  92%, rgba(200,210,255,0.35) 0%,transparent 100%),
+    radial-gradient(circle 2px   at 66%  86%, rgba(255,255,255,0.5)  0%,transparent 100%),
+    radial-gradient(circle 1px   at 79%  94%, rgba(180,200,255,0.3)  0%,transparent 100%),
+    radial-gradient(circle 1.5px at 95%  89%, rgba(255,255,255,0.4)  0%,transparent 100%);
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar { position:relative; }
+.sidebar::after {
+  content:''; position:absolute; top:0; right:0; bottom:0; width:1px; pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(129,140,248,0.35) 35%,rgba(129,140,248,0.35) 65%,transparent);
+}
+
+/* ─── YEAR BANNER ─── */
+.year-banner { position:relative; overflow:hidden; }
+.year-banner::after {
+  content:'★ ✦ ★ ✦ ★ ✦ ★ ✦ ★';
+  position:absolute; right:20px; top:50%; transform:translateY(-50%);
+  font-size:14px; letter-spacing:8px; opacity:0.06; pointer-events:none;
+  color:var(--accent); white-space:nowrap;
+}

@@ -1,0 +1,55 @@
+/* ===== THEME: ANIME 🌸 — Sakura Night ===== */
+:root {
+  --bg:#070510; --bg1:#0c0818; --bg2:#110b22; --bg3:#150e2a; --bg4:#1a1235;
+  --sidebar-bg:#080616;
+  --topbar-bg:rgba(7,5,16,0.96);
+  --banner-bg:linear-gradient(135deg,rgba(233,30,99,0.12) 0%,rgba(156,39,176,0.09) 50%,rgba(255,152,0,0.06) 100%);
+  --banner-border:rgba(233,30,99,0.22);
+  --border:#1e0c2e; --border2:#281240; --border-rgb:30,12,46;
+  --text:#f0d8f0; --muted:#481558; --muted2:#8858a8;
+  --accent:#e91e8c; --accent-light:#f472b6; --accent-rgb:233,30,140;
+  --accent-glow:rgba(233,30,140,0.45);
+  --accent-bg:rgba(233,30,140,0.08); --accent-border:rgba(233,30,140,0.3);
+  --nav-hover:rgba(233,30,140,0.07); --nav-active:rgba(233,30,140,0.13);
+  --row-hover:rgba(233,30,140,0.04);
+  --c-done:#ab47bc; --c-now:#f48fb1; --c-plan:#ffb74d; --c-drop:#78909c;
+  --c-done-rgb:171,71,188; --c-now-rgb:244,143,177;
+  --c-plan-rgb:255,183,77; --c-drop-rgb:120,144,156;
+  --danger:#c2185b; --btn-text:#fff;
+}
+
+/* ─── PURPLE-PINK AMBIENT ─── */
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:-2;
+  background:
+    radial-gradient(ellipse 700px 500px at -5% 20%,  rgba(233,30,140,0.08) 0%,transparent 60%),
+    radial-gradient(ellipse 500px 700px at 105% 70%, rgba(156,39,176,0.06) 0%,transparent 60%),
+    radial-gradient(ellipse 400px 300px at 50% 105%, rgba(255,152,0,0.04)  0%,transparent 50%);
+}
+
+/* ─── SAKURA PETALS + HAPPY (anime cat) ─── */
+body::after {
+  content:''; position:fixed; top:0; right:0; width:380px; height:100vh;
+  pointer-events:none; z-index:-1; opacity:0.08;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 380 800'%3E%3C!-- sakura petals scattered --%3E%3Cellipse cx='60'  cy='40'  rx='16' ry='24' fill='%23e91e8c' transform='rotate(-25,60,40)'/%3E%3Cellipse cx='180' cy='20'  rx='13' ry='19' fill='%23f48fb1' transform='rotate(15,180,20)'/%3E%3Cellipse cx='320' cy='55'  rx='17' ry='26' fill='%23e91e8c' transform='rotate(-10,320,55)'/%3E%3Cellipse cx='100' cy='120' rx='12' ry='18' fill='%23ab47bc' transform='rotate(30,100,120)'/%3E%3Cellipse cx='260' cy='100' rx='15' ry='22' fill='%23f48fb1' transform='rotate(-20,260,100)'/%3E%3Cellipse cx='40'  cy='200' rx='11' ry='17' fill='%23e91e8c' transform='rotate(10,40,200)'/%3E%3Cellipse cx='340' cy='180' rx='14' ry='21' fill='%23ab47bc' transform='rotate(-30,340,180)'/%3E%3Cellipse cx='150' cy='250' rx='13' ry='19' fill='%23f48fb1' transform='rotate(20,150,250)'/%3E%3Cellipse cx='280' cy='280' rx='16' ry='24' fill='%23e91e8c' transform='rotate(-15,280,280)'/%3E%3Cellipse cx='80'  cy='340' rx='12' ry='18' fill='%23f48fb1' transform='rotate(25,80,340)'/%3E%3Cellipse cx='200' cy='320' rx='15' ry='22' fill='%23ab47bc' transform='rotate(-8,200,320)'/%3E%3Cellipse cx='350' cy='360' rx='11' ry='16' fill='%23e91e8c' transform='rotate(18,350,360)'/%3E%3C!-- Happy (Fairy Tail cat) simple SVG --%3E%3C!-- body --%3E%3Cellipse cx='190' cy='560' rx='45' ry='55' fill='%234fc3f7'/%3E%3C!-- head --%3E%3Cellipse cx='190' cy='490' rx='42' ry='45' fill='%234fc3f7'/%3E%3C!-- white belly --%3E%3Cellipse cx='190' cy='565' rx='30' ry='38' fill='%23e0f7fa' opacity='0.9'/%3E%3C!-- ears --%3E%3Cpolygon points='155,460 148,430 172,452' fill='%234fc3f7'/%3E%3Cpolygon points='160,458 155,436 174,452' fill='%23f8bbd0' opacity='0.7'/%3E%3Cpolygon points='225,460 232,430 208,452' fill='%234fc3f7'/%3E%3Cpolygon points='220,458 225,436 206,452' fill='%23f8bbd0' opacity='0.7'/%3E%3C!-- big anime eyes --%3E%3Cellipse cx='173' cy='490' rx='16' ry='20' fill='%23212121'/%3E%3Cellipse cx='207' cy='490' rx='16' ry='20' fill='%23212121'/%3E%3Cellipse cx='173' cy='490' rx='8'  ry='10' fill='%23fff'/%3E%3Cellipse cx='207' cy='490' rx='8'  ry='10' fill='%23fff'/%3E%3Cellipse cx='176' cy='488' rx='4'  ry='5'  fill='%23212121'/%3E%3Cellipse cx='210' cy='488' rx='4'  ry='5'  fill='%23212121'/%3E%3Cellipse cx='178' cy='486' rx='2'  ry='2.5' fill='%23fff'/%3E%3Cellipse cx='212' cy='486' rx='2'  ry='2.5' fill='%23fff'/%3E%3C!-- nose --%3E%3Cellipse cx='190' cy='508' rx='5' ry='3' fill='%23f48fb1'/%3E%3C!-- mouth --%3E%3Cpath d='M183,513 Q190,520 197,513' stroke='%23555' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C!-- arms (crossed) --%3E%3Cpath d='M148,540 Q158,550 170,545 Q182,540 188,550' stroke='%234fc3f7' stroke-width='12' fill='none' stroke-linecap='round'/%3E%3Cpath d='M232,540 Q222,550 210,545 Q198,540 192,550' stroke='%234fc3f7' stroke-width='12' fill='none' stroke-linecap='round'/%3E%3C!-- tail --%3E%3Cpath d='M235,590 Q270,570 280,540 Q290,510 270,490 Q255,476 240,490' stroke='%234fc3f7' stroke-width='10' fill='none' stroke-linecap='round'/%3E%3C!-- green bowtie --%3E%3Cpolygon points='182,520 190,526 198,520 190,514' fill='%234caf50'/%3E%3Ccircle cx='190' cy='520' r='4' fill='%2381c784'/%3E%3C!-- legs --%3E%3Cellipse cx='170' cy='618' rx='18' ry='22' fill='%234fc3f7'/%3E%3Cellipse cx='210' cy='618' rx='18' ry='22' fill='%234fc3f7'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right bottom;
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar { position:relative; }
+.sidebar::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px; pointer-events:none;
+  background:linear-gradient(90deg,transparent,#e91e8c,#ab47bc,transparent);
+}
+.sidebar::after {
+  content:''; position:absolute; top:0; right:0; bottom:0; width:1px; pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(233,30,140,0.35) 40%,rgba(233,30,140,0.35) 60%,transparent);
+}
+
+/* ─── YEAR BANNER ─── */
+.year-banner { position:relative; overflow:hidden; }
+.year-banner::after {
+  content:'映 画'; position:absolute; right:24px; top:50%; transform:translateY(-50%);
+  font-size:52px; opacity:0.06; pointer-events:none; color:var(--accent);
+  font-family:serif; line-height:1; letter-spacing:8px;
+}
