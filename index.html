@@ -376,5 +376,35 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
 </script>
+
+<script>
+function showExportMenu() {
+  document.getElementById('exportModal').classList.add('open');
+}
+function exportCSV() {
+  const entries = getEntries();
+  const typeNames = {'film':'Фільм','serial':'Серіал','anime-serial':'Аніме Серіал','anime-film':'Аніме Фільм','mult':'Мультфільм','mult-serial':'Мультсеріал'};
+  const statusNames = {'done':'Переглянуто','now':'Дивлюся','plan':'В планах','drop':'Кинув'};
+  const headers = ['#','Назва','Тип','Рік','Дата початку','Дата завершення','Тривалість','Сезони','Серії','Моя оцінка','Шедевр','IMDb','Статус','Жанри'];
+  const rows = entries.map((e,i) => [i+1, e.name, typeNames[e.type]||e.type, e.year||'', e.dateStart||'', e.dateEnd||'', e.dur||'', e.seasons||'', e.episodes||'', e.rating||'', e.fire?'🔥':'', e.imdb||'', statusNames[e.status]||e.status, (e.genres||[]).join(', ')]);
+  const csv = [headers,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'infinity-loop-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  closeModal('exportModal');
+}
+function exportJSON() {
+  const data = {exportedAt:new Date().toISOString(), entries:getEntries(), genres:getGenres(), settings:getSettings()};
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'infinity-loop-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  closeModal('exportModal');
+}
+</script>
+
 </body>
 </html>
