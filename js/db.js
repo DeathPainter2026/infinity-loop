@@ -134,7 +134,7 @@ async function dbAddGenre(name) {
     if (!db.genres.includes(name)) { db.genres.push(name); localSave(db); }
     return;
   }
-  await SB.from('genres').insert({ name }).onConflict('name').ignore();
+  await SB.from('genres').upsert({ name }, { onConflict: 'name', ignoreDuplicates: true });
 }
 
 async function dbRemoveGenre(name) {
@@ -205,7 +205,7 @@ async function dbAddUser(login, pass, role = 'guest') {
     }
     return;
   }
-  await SB.from('users').insert({ login, pass, role }).onConflict('login').ignore();
+  await SB.from('users').upsert({ login, pass, role }, { onConflict: 'login', ignoreDuplicates: true });
 }
 
 async function dbRemoveUser(login) {
