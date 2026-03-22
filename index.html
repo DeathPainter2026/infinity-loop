@@ -112,6 +112,7 @@
           <button class="vb" id="vbCards" onclick="setView('cards')">⊞</button>
         </div>
         <button class="light-toggle-btn topbar-light-btn" onclick="toggleLightMode()" id="lightToggleBtn" title="Світла / темна">☀️</button>
+        <button class="light-toggle-btn topbar-light-btn" onclick="showExportMenu()" id="exportBtn" title="Експорт">📥</button>
         <button class="add-btn" id="addBtn" onclick="openAddModal()" style="display:none">+ Додати</button>
       </div>
     </div>
@@ -339,6 +340,16 @@
 </div>
 
 
+<div class="overlay" id="exportModal" onclick="overlayClick(event,'exportModal')">
+  <div class="modal-box" style="max-width:340px">
+    <div class="modal-hdr"><div class="modal-ttl">Експорт списку</div><button class="modal-close" onclick="closeModal('exportModal')">✕</button></div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:10px">
+      <button class="btn-primary" onclick="exportCSV()" style="width:100%">📊 Excel / CSV</button>
+      <button class="btn-primary" onclick="exportJSON()" style="width:100%">💾 JSON (резервна копія)</button>
+      <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:4px">CSV відкривається в Excel · JSON для відновлення даних</div>
+    </div>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var SUPABASE_URL  = 'https://cteduqvxfppgpfhywsgw.supabase.co';
