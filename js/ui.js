@@ -225,7 +225,7 @@ function refreshGenreFilters() {
   // Merge with genres table (for genres not yet used)
   const allGenres = [...new Set([...getGenres(), ...fromEntries])].sort();
   c.innerHTML = `<button class="gf${_genre==='all'?' active':''}" onclick="setGenre('all',this)">Всі</button>`
-    + allGenres.map(g=>`<button class="gf${_genre===g?' active':''}" onclick="setGenre(${JSON.stringify(g)},this)">${g}</button>`).join('');
+    + allGenres.map(g=>`<button class="gf${_genre===g?' active':''}" onclick="setGenre('${g.replace(/'/g,"\\'")}',this)">${g}</button>`).join('');
 }
 
 // ===== BADGES =====
