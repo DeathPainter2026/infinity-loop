@@ -204,6 +204,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Show loading state
   const ls = document.getElementById('loginScreen');
 
+  // Init Supabase client
+  initSupabase();
+
   // Load all data (works for both localStorage and Supabase)
   try {
     await loadAll();

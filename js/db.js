@@ -23,7 +23,7 @@ function currentUser() {
 // ENTRIES
 // =============================================
 async function dbGetEntries() {
-  if (!USE_SUPABASE) {
+  if (!USE_SUPABASE || !SB) {
     return (localLoad()?.entries || []).filter(e => e.user_id === currentUser() || e.user_id === 'DeathPainter');
   }
   const { data, error } = await SB.from('entries')
@@ -34,7 +34,7 @@ async function dbGetEntries() {
 }
 
 async function dbAddEntry(entry) {
-  if (!USE_SUPABASE) {
+  if (!USE_SUPABASE || !SB) {
     const db = localLoad() || { entries: [], nextId: 1 };
     entry.id = db.nextId++;
     entry.user_id = currentUser();
@@ -50,7 +50,7 @@ async function dbAddEntry(entry) {
 }
 
 async function dbUpdateEntry(id, patch) {
-  if (!USE_SUPABASE) {
+  if (!USE_SUPABASE || !SB) {
     const db = localLoad();
     if (!db) return;
     const idx = db.entries.findIndex(e => e.id === id);
@@ -64,7 +64,7 @@ async function dbUpdateEntry(id, patch) {
 }
 
 async function dbDeleteEntry(id) {
-  if (!USE_SUPABASE) {
+  if (!USE_SUPABASE || !SB) {
     const db = localLoad();
     if (!db) return;
     db.entries = db.entries.filter(e => e.id !== id);
@@ -119,7 +119,7 @@ function dbToEntry(r) {
 // GENRES
 // =============================================
 async function dbGetGenres() {
-  if (!USE_SUPABASE) {
+  if (!USE_SUPABASE || !SB) {
     return localLoad()?.genres || [];
   }
   const { data, error } = await SB.from('genres').select('name').order('name');
@@ -128,7 +128,7 @@ async function dbGetGenres() {
 }
 
 async function dbAddGenre(name) {
-  if (!USE_SUPABASE) {
+  if (!USE_SUPABASE || !SB) {
     const db = localLoad() || {};
     if (!db.genres) db.genres = [];
     if (!db.genres.includes(name)) { db.genres.push(name); localSave(db); }
@@ -138,7 +138,7 @@ async function dbAddGenre(name) {
 }
 
 async function dbRemoveGenre(name) {
-  if (!USE_SUPABASE) {
+  if (!USE_SUPABASE || !SB) {
     const db = localLoad();
     if (!db) return;
     db.genres = db.genres.filter(g => g !== name);
@@ -152,7 +152,7 @@ async function dbRemoveGenre(name) {
 // SETTINGS
 // =============================================
 async function dbGetSettings() {
-  if (!USE_SUPABASE) {
+  if (!USE_SUPABASE || !SB) {
     return localLoad()?.settings || {};
   }
   const { data } = await SB.from('settings').select('*').eq('user_id', currentUser()).single();
@@ -166,7 +166,7 @@ async function dbGetSettings() {
 }
 
 async function dbSaveSettings(patch) {
-  if (!USE_SUPABASE) {
+  if (!USE_SUPABASE || !SB) {
     const db = localLoad() || {};
     db.settings = { ...db.settings, ...patch };
     localSave(db);
@@ -187,7 +187,7 @@ async function dbSaveSettings(patch) {
 // USERS (auth)
 // =============================================
 async function dbGetUsers() {
-  if (!USE_SUPABASE) {
+  if (!USE_SUPABASE || !SB) {
     return localLoad()?.users || [{ login: 'DeathPainter', pass: 'Reckless2015', role: 'admin' }];
   }
   const { data, error } = await SB.from('users').select('*');
@@ -196,7 +196,7 @@ async function dbGetUsers() {
 }
 
 async function dbAddUser(login, pass, role = 'guest') {
-  if (!USE_SUPABASE) {
+  if (!USE_SUPABASE || !SB) {
     const db = localLoad() || {};
     if (!db.users) db.users = [];
     if (!db.users.find(u => u.login === login)) {
@@ -209,7 +209,7 @@ async function dbAddUser(login, pass, role = 'guest') {
 }
 
 async function dbRemoveUser(login) {
-  if (!USE_SUPABASE) {
+  if (!USE_SUPABASE || !SB) {
     const db = localLoad();
     if (!db) return;
     db.users = db.users.filter(u => u.login !== login);
@@ -220,7 +220,7 @@ async function dbRemoveUser(login) {
 }
 
 async function dbUpdateAdminPass(newPass) {
-  if (!USE_SUPABASE) {
+  if (!USE_SUPABASE || !SB) {
     const db = localLoad();
     if (!db) return;
     const admin = db.users?.find(u => u.role === 'admin');
