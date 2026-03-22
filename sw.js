@@ -1,39 +1,41 @@
-// ∞ Infinity Loop — Service Worker
-const CACHE = 'il-v2';
+// Infinity Loop Service Worker v3
+const CACHE = 'il-v3';
 const STATIC = [
-  '/',
-  '/index.html',
-  '/css/main.css',
-  '/css/themes.css',
-  '/js/db.js',
-  '/js/data.js',
-  '/js/auth.js',
-  '/js/ui.js',
-  '/js/analytics.js',
-  '/js/app.js',
+  '/img/bg-cthulhu.png',
+  '/img/bg-classic.jpg',
+  '/img/bg-cyberpunk.jpg',
+  '/img/bg-horror.jpg',
+  '/img/bg-anime.jpg',
+  '/img/bg-samurai.jpg',
+  '/img/bg-anime2.jpg',
 ];
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(STATIC)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then(c => c.addAll(STATIC))
+      .then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
+// Network first for everything except images
 self.addEventListener('fetch', e => {
-  // Network first for API calls, cache first for static assets
-  if (e.request.url.includes('supabase.co')) {
-    e.respondWith(fetch(e.request).catch(() => new Response('[]')));
+  if (e.request.url.match(/\.(png|jpg|jpeg|webp)$/)) {
+    e.respondWith(
+      caches.match(e.request).then(cached => cached || fetch(e.request))
+    );
     return;
   }
+  // Always network first for HTML/JS/CSS
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    fetch(e.request).catch(() => caches.match(e.request))
   );
 });
