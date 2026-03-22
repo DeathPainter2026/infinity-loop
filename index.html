@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>∞ Infinity Loop</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#00a896">
@@ -404,6 +404,49 @@ function exportJSON() {
   a.click();
   closeModal('exportModal');
 }
+</script>
+
+
+<script>
+function mobileNav(page, el) {
+  // Update active state
+  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  // Navigate
+  gotoPage(page, null);
+}
+
+function mobileNavTheme() {
+  // Show theme select as a bottom sheet on mobile
+  const sel = document.getElementById('themeSelect');
+  if (sel) {
+    // Create a quick theme picker overlay
+    const cur = localStorage.getItem('il_theme') || 'cthulhu';
+    const themes = [
+      ['cthulhu','🐙 Ктулху'],['classic','🚀 Фантастика'],['cyberpunk','⚡ Кіберпанк'],
+      ['horror','💀 Жахи'],['anime','🌸 Аніме'],['samurai','⚔️ Самурай'],['anime2','🔥 Аніме 2']
+    ];
+    const sheet = document.createElement('div');
+    sheet.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:var(--bg1);border-top:1px solid var(--border);border-radius:16px 16px 0 0;padding:16px;z-index:9999;';
+    sheet.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:12px">Оберіть тему</div>' +
+      themes.map(([k,v]) => `<button onclick="setTheme('${k}');this.parentElement.remove()" style="display:block;width:100%;text-align:left;padding:12px 16px;background:${k===cur?'var(--accent-bg)':'none'};border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:14px;cursor:pointer;font-family:Raleway,sans-serif">${v}</button>`).join('') +
+      '<button onclick="this.parentElement.remove()" style="display:block;width:100%;padding:12px;background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;margin-top:4px">Скасувати</button>';
+    document.body.appendChild(sheet);
+  }
+}
+
+// Show settings in mobile nav for admin
+document.addEventListener('DOMContentLoaded', () => {
+  const checkAdmin = setInterval(() => {
+    if (window._currentUser) {
+      const mnSettings = document.getElementById('mnSettings');
+      if (mnSettings && window._currentUser.role === 'admin') {
+        mnSettings.style.display = '';
+      }
+      clearInterval(checkAdmin);
+    }
+  }, 200);
+});
 </script>
 
 </body>
