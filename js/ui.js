@@ -217,8 +217,15 @@ function sidebarFilter(key,val,el) {
 }
 function refreshGenreFilters() {
   const c = document.getElementById('genreFilters');
+  if (!c) return;
+  // Build genre list from actual entries to guarantee exact match
+  const fromEntries = [...new Set(
+    getEntries().flatMap(e => e.genres || [])
+  )].sort();
+  // Merge with genres table (for genres not yet used)
+  const allGenres = [...new Set([...getGenres(), ...fromEntries])].sort();
   c.innerHTML = `<button class="gf${_genre==='all'?' active':''}" onclick="setGenre('all',this)">Всі</button>`
-    + getGenres().map(g=>`<button class="gf${_genre===g?' active':''}" onclick="setGenre(${JSON.stringify(g)},this)">${g}</button>`).join('');
+    + allGenres.map(g=>`<button class="gf${_genre===g?' active':''}" onclick="setGenre(${JSON.stringify(g)},this)">${g}</button>`).join('');
 }
 
 // ===== BADGES =====
@@ -552,4 +559,70 @@ function refreshYearFilter() {
   const cur = sel.value;
   sel.innerHTML = '<option value="all">Всі роки</option>' +
     years.map(y => `<option value="${y}"${cur===y?' selected':''}>${y}</option>`).join('');
+}
+
+// ===== EXPORT =====
+function showExportMenu() {
+  document.getElementById('exportModal').classList.add('open');
+}
+
+function exportCSV() {
+  const entries = getEntries();
+  const headers = ['#','Назва','Тип','Рік','Дата початку','Дата завершення','Тривалість','Сезони','Серії','Моя оцінка','Шедевр','IMDb','Статус','Жанри'];
+  
+  const typeNames = {
+    'film':'Фільм','serial':'Серіал','anime-serial':'Аніме Серіал',
+    'anime-film':'Аніме Фільм','mult':'Мультфільм','mult-serial':'Мультсеріал'
+  };
+  const statusNames = {
+    'done':'Переглянуто','now':'Дивлюся','plan':'В планах','drop':'Кинув'
+  };
+
+  const rows = entries.map((e, i) => [
+    i + 1,
+    e.name,
+    typeNames[e.type] || e.type,
+    e.year || '',
+    e.dateStart || '',
+    e.dateEnd || '',
+    e.dur || '',
+    e.seasons || '',
+    e.episodes || '',
+    e.rating || '',
+    e.fire ? '🔥' : '',
+    e.imdb || '',
+    statusNames[e.status] || e.status,
+    (e.genres || []).join(', '),
+  ]);
+
+  const csvContent = [headers, ...rows]
+    .map(row => row.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(','))
+    .join('\n');
+
+  // Add BOM for Excel UTF-8
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `infinity-loop-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  closeModal('exportModal');
+}
+
+function exportJSON() {
+  const data = {
+    exportedAt: new Date().toISOString(),
+    entries: getEntries(),
+    genres: getGenres(),
+    settings: getSettings(),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `infinity-loop-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  closeModal('exportModal');
 }
