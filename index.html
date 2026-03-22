@@ -17,6 +17,7 @@
 
 <style>
 @media (max-width: 768px) {
+  .mobile-only { display: inline-flex !important; }
   .sidebar { 
     display: none !important; 
     visibility: hidden !important;
@@ -56,6 +57,7 @@
   .mobile-nav { display: flex !important; }
 }
 .mobile-nav { display: none; }
+.mobile-only { display: none; }
 .mobile-nav {
   position: fixed; bottom: 0; left: 0; right: 0;
   background: var(--sidebar-bg); border-top: 1px solid var(--border);
@@ -169,6 +171,8 @@
           <button class="vb" id="vbCards" onclick="setView('cards')">⊞</button>
         </div>
         <button class="light-toggle-btn topbar-light-btn" onclick="toggleLightMode()" id="lightToggleBtn" title="Світла / темна">☀️</button>
+        <button class="light-toggle-btn topbar-light-btn mobile-only" onclick="mobileNavTheme()" title="Тема">🎨</button>
+        <button class="light-toggle-btn topbar-light-btn mobile-only" id="mobileSettingsBtn" onclick="openSettings()" title="Налаштування" style="display:none">⚙️</button>
         <button class="light-toggle-btn topbar-light-btn" onclick="showExportMenu()" id="exportBtn" title="Експорт">📥</button>
         <button class="add-btn" id="addBtn" onclick="openAddModal()" style="display:none">+ Додати</button>
       </div>
@@ -497,9 +501,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const checkAdmin = setInterval(() => {
     if (window._currentUser) {
       const mnSettings = document.getElementById('mnSettings');
-      if (mnSettings && window._currentUser.role === 'admin') {
-        mnSettings.style.display = '';
-      }
+      if (mnSettings && window._currentUser.role === 'admin') mnSettings.style.display = '';
+      const mobileSettingsBtn = document.getElementById('mobileSettingsBtn');
+      if (mobileSettingsBtn && window._currentUser.role === 'admin') mobileSettingsBtn.style.display = '';
       clearInterval(checkAdmin);
     }
   }, 200);
