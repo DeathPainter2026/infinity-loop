@@ -28,7 +28,7 @@ async function dbGetEntries() {
   }
   const { data, error } = await SB.from('entries')
     .select('*')
-    .order('date_end', { ascending: false, nullsFirst: false });
+    .order('id', { ascending: false });
   if (error) { console.error(error); return []; }
   return data.map(dbToEntry);
 }
