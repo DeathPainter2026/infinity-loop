@@ -107,6 +107,22 @@
 </div>
 
 <div id="app" class="app-layout" style="display:none">
+  <!-- Mobile bottom navigation bar -->
+  <nav class="mobile-nav">
+    <button class="mobile-nav-item active" id="mnList" onclick="mobileNav('list',this)">
+      <span>📋</span>Список
+    </button>
+    <button class="mobile-nav-item" id="mnAnalytics" onclick="mobileNav('analytics',this)">
+      <span>📊</span>Аналітика
+    </button>
+    <button class="mobile-nav-item mobile-only" onclick="mobileNavTheme()">
+      <span>🎨</span>Тема
+    </button>
+    <button class="mobile-nav-item" id="mnSettingsMob" onclick="openSettings()" style="display:none">
+      <span>⚙️</span>Налашт.
+    </button>
+  </nav>
+
   <aside class="sidebar">
     <div class="sidebar-header">
       <span class="logo-mark">∞</span>
@@ -504,6 +520,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (mnSettings && window._currentUser.role === 'admin') mnSettings.style.display = '';
       const mobileSettingsBtn = document.getElementById('mobileSettingsBtn');
       if (mobileSettingsBtn && window._currentUser.role === 'admin') mobileSettingsBtn.style.display = '';
+      const mnSettingsMob = document.getElementById('mnSettingsMob');
+      if (mnSettingsMob && window._currentUser.role === 'admin') mnSettingsMob.style.display = '';
       clearInterval(checkAdmin);
     }
   }, 200);
