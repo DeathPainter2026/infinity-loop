@@ -57,7 +57,8 @@ function renderAnalytics() {
       ${cardComparison(done)}
     </div>
     <div style="margin-top:16px">${cardHoursLineChart(entries)}</div>
-    <div style="margin-top:16px">${cardMonthlyByType(entries)}</div>`;
+    <div style="margin-top:16px">${cardMonthlyByType(entries)}</div>
+    ${cardByReleaseYear(entries)}`;
 }
 
 function anCard(cls,icon,title,content) {
@@ -679,5 +680,78 @@ function cardMonthlyByType(entries) {
     <div class="an-ttl"><span>📆</span> Типи по місяцях</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">${legend}</div>
     <div style="display:flex;align-items:flex-end;gap:8px">${cols}</div>
+  </div>`;
+}
+
+// ===== STATS BY RELEASE YEAR =====
+function cardByReleaseYear(entries) {
+  const done = entries.filter(e => e.status === 'done' && e.year);
+  
+  // Extract start year from year field (handles "2020-2024" format)
+  const getYear = e => {
+    const y = String(e.year).match(/\d{4}/);
+    return y ? parseInt(y[0]) : null;
+  };
+  
+  const yearCounts = {};
+  done.forEach(e => {
+    const y = getYear(e);
+    if (!y) return;
+    if (!yearCounts[y]) yearCounts[y] = { total:0, film:0, serial:0, anime:0, mult:0 };
+    yearCounts[y].total++;
+    if (e.type === 'film') yearCounts[y].film++;
+    else if (e.type === 'serial') yearCounts[y].serial++;
+    else if (e.type === 'anime-serial' || e.type === 'anime-film') yearCounts[y].anime++;
+    else if (e.type === 'mult' || e.type === 'mult-serial') yearCounts[y].mult++;
+  });
+  
+  const years = Object.keys(yearCounts).map(Number).sort((a,b) => b-a);
+  if (!years.length) return '';
+  
+  const oldest = years[years.length-1];
+  const newest = years[0];
+  const maxCount = Math.max(...years.map(y => yearCounts[y].total));
+  
+  const rows = years.map(y => {
+    const c = yearCounts[y];
+    const barW = Math.round(c.total / maxCount * 100);
+    const parts = [];
+    if (c.film)   parts.push(`<span style="color:#00bcd4">${c.film}🎬</span>`);
+    if (c.serial) parts.push(`<span style="color:#66bb6a">${c.serial}📺</span>`);
+    if (c.anime)  parts.push(`<span style="color:#f06292">${c.anime}⛩️</span>`);
+    if (c.mult)   parts.push(`<span style="color:#ffb74d">${c.mult}🎨</span>`);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+      <div style="width:36px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted2);flex-shrink:0">${y}</div>
+      <div style="flex:1;background:var(--bg3);border-radius:4px;height:8px;overflow:hidden">
+        <div style="width:${barW}%;height:100%;background:var(--accent);border-radius:4px"></div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--accent);width:20px;text-align:right">${c.total}</div>
+      <div style="font-size:11px;color:var(--muted2);min-width:80px">${parts.join(' ')}</div>
+    </div>`;
+  }).join('');
+
+  const funFacts = `
+    <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px">
+        <div style="color:var(--muted);font-size:10px;margin-bottom:2px">Найстаріший</div>
+        <div style="color:var(--accent);font-weight:600">${oldest} р.</div>
+        <div style="color:var(--muted2);font-size:11px">${done.filter(e=>getYear(e)===oldest).map(e=>e.name).join(', ').slice(0,40)}</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px">
+        <div style="color:var(--muted);font-size:10px;margin-bottom:2px">Найновіший</div>
+        <div style="color:var(--accent);font-weight:600">${newest} р.</div>
+        <div style="color:var(--muted2);font-size:11px">${done.filter(e=>getYear(e)===newest).map(e=>e.name).join(', ').slice(0,40)}</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px">
+        <div style="color:var(--muted);font-size:10px;margin-bottom:2px">Найпродуктивніший рік</div>
+        <div style="color:var(--accent);font-weight:600">${years.reduce((a,b) => yearCounts[a].total >= yearCounts[b].total ? a : b)} р.</div>
+        <div style="color:var(--muted2);font-size:11px">${maxCount} переглядів</div>
+      </div>
+    </div>`;
+
+  return `<div class="an-card" style="margin-top:16px">
+    <div class="an-ttl"><span>📅</span> По роках випуску</div>
+    ${funFacts}
+    <div style="max-height:320px;overflow-y:auto">${rows}</div>
   </div>`;
 }
