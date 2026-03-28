@@ -363,17 +363,21 @@ function cardMonthlyByType(entries) {
   const cols=activeIdx.map(i=>{
     const m=mData[i];
     const total=Object.values(m).reduce((a,b)=>a+b,0);
+    if(!total) return '';
+    const hVal=Math.round(mHours[i]);
+    const hStr=hVal?`${hVal}г`:'';
     const segs=tc.filter(t=>m[t.key]).map(t=>{
       const h=Math.max(3,Math.round((m[t.key]/maxTot)*BAR_H));
       return `<div style="height:${h}px;background:${t.color};width:100%"></div>`;
     }).join('');
     return `<div class="sb-col">
-      <div class="mb-v">${total||''}</div>
-      <div class="mb-area" style="height:${BAR_H}px">
+      <div class="mb-v">${total}</div>
+      <div class="mb-area" style="height:${BAR_H}px;position:relative">
         <div style="width:100%;height:100%;display:flex;flex-direction:column-reverse;border-radius:4px 4px 0 0;overflow:hidden">${segs}</div>
+        ${hStr?`<div style="position:absolute;bottom:3px;left:0;right:0;text-align:center;font-size:9px;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.8);pointer-events:none">${hStr}</div>`:''}
       </div>
       <div class="mb-lbl">${mLabels[i]}</div>
-      ${hStr?`<div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--muted2);text-align:center">${hStr}</div>`:'<div style="height:11px"></div>'}
+      ${hStr?`<div style="font-size:8px;color:var(--muted2);text-align:center;margin-top:1px">${hStr}</div>`:'<div style="height:10px"></div>'}
     </div>`;
   }).join('');
 
@@ -664,17 +668,21 @@ function cardMonthlyByType(entries) {
   const cols=activeIdx.map(i=>{
     const m=mData[i];
     const total=Object.values(m).reduce((a,b)=>a+b,0);
+    if(!total) return '';
+    const hVal=Math.round(mHours[i]);
+    const hStr=hVal?`${hVal}г`:'';
     const segs=tc.filter(t=>m[t.key]).map(t=>{
       const h=Math.max(3,Math.round((m[t.key]/maxTot)*BAR_H));
       return `<div style="height:${h}px;background:${t.color};width:100%"></div>`;
     }).join('');
     return `<div class="sb-col">
-      <div class="mb-v">${total||''}</div>
-      <div class="mb-area" style="height:${BAR_H}px">
+      <div class="mb-v">${total}</div>
+      <div class="mb-area" style="height:${BAR_H}px;position:relative">
         <div style="width:100%;height:100%;display:flex;flex-direction:column-reverse;border-radius:4px 4px 0 0;overflow:hidden">${segs}</div>
+        ${hStr?`<div style="position:absolute;bottom:3px;left:0;right:0;text-align:center;font-size:9px;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.8);pointer-events:none">${hStr}</div>`:''}
       </div>
       <div class="mb-lbl">${mLabels[i]}</div>
-      ${hStr?`<div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--muted2);text-align:center">${hStr}</div>`:'<div style="height:11px"></div>'}
+      ${hStr?`<div style="font-size:8px;color:var(--muted2);text-align:center;margin-top:1px">${hStr}</div>`:'<div style="height:10px"></div>'}
     </div>`;
   }).join('');
 

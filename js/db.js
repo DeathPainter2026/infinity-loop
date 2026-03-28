@@ -159,12 +159,14 @@ async function dbGetSettings() {
     const { data, error } = await SB.from('settings').select('*').eq('user_id', currentUser()).maybeSingle();
     if (!data || error) return {};
     return {
-      omdbKey:   data.omdb_key   || '',
+      omdbKey:   data.omdb_key   || localStorage.getItem('il_omdb_key') || '',
       vibeYear:  data.vibe_year  || '2026',
       vibeTitle: data.vibe_title || '',
       vibeTags:  data.vibe_tags  || '',
     };
-  } catch(e) { return {}; }
+  } catch(e) { 
+    return { omdbKey: localStorage.getItem('il_omdb_key') || '' };
+  }
 }
 
 async function dbSaveSettings(patch) {
@@ -186,6 +188,8 @@ async function dbSaveSettings(patch) {
   };
   const { error } = await SB.from('settings').upsert(row, { onConflict: 'user_id' });
   if (error) console.error('Settings save error:', error);
+  // Backup omdb key in localStorage
+  if (merged.omdbKey) localStorage.setItem('il_omdb_key', merged.omdbKey);
 }
 
 // =============================================
