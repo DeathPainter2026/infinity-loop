@@ -155,14 +155,16 @@ async function dbGetSettings() {
   if (!USE_SUPABASE || !SB) {
     return localLoad()?.settings || {};
   }
-  const { data } = await SB.from('settings').select('*').eq('user_id', currentUser()).single();
-  if (!data) return {};
-  return {
-    omdbKey:   data.omdb_key   || '',
-    vibeYear:  data.vibe_year  || '2026',
-    vibeTitle: data.vibe_title || '',
-    vibeTags:  data.vibe_tags  || '',
-  };
+  try {
+    const { data, error } = await SB.from('settings').select('*').eq('user_id', currentUser()).maybeSingle();
+    if (!data || error) return {};
+    return {
+      omdbKey:   data.omdb_key   || '',
+      vibeYear:  data.vibe_year  || '2026',
+      vibeTitle: data.vibe_title || '',
+      vibeTags:  data.vibe_tags  || '',
+    };
+  } catch(e) { return {}; }
 }
 
 async function dbSaveSettings(patch) {
@@ -172,15 +174,18 @@ async function dbSaveSettings(patch) {
     localSave(db);
     return;
   }
+  // Get existing settings first to preserve other fields
+  const existing = window._cache?.settings || {};
+  const merged = { ...existing, ...patch };
   const row = {
     user_id:    currentUser(),
-    omdb_key:   patch.omdbKey   !== undefined ? patch.omdbKey   : undefined,
-    vibe_year:  patch.vibeYear  !== undefined ? patch.vibeYear  : undefined,
-    vibe_title: patch.vibeTitle !== undefined ? patch.vibeTitle : undefined,
-    vibe_tags:  patch.vibeTags  !== undefined ? patch.vibeTags  : undefined,
+    omdb_key:   merged.omdbKey   || '',
+    vibe_year:  merged.vibeYear  || '2026',
+    vibe_title: merged.vibeTitle || '',
+    vibe_tags:  merged.vibeTags  || '',
   };
-  Object.keys(row).forEach(k => row[k] === undefined && delete row[k]);
-  await SB.from('settings').upsert(row, { onConflict: 'user_id' });
+  const { error } = await SB.from('settings').upsert(row, { onConflict: 'user_id' });
+  if (error) console.error('Settings save error:', error);
 }
 
 // =============================================

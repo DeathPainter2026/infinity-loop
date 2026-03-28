@@ -373,6 +373,7 @@ function cardMonthlyByType(entries) {
         <div style="width:100%;height:100%;display:flex;flex-direction:column-reverse;border-radius:4px 4px 0 0;overflow:hidden">${segs}</div>
       </div>
       <div class="mb-lbl">${mLabels[i]}</div>
+      ${hStr?`<div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--muted2);text-align:center">${hStr}</div>`:'<div style="height:11px"></div>'}
     </div>`;
   }).join('');
 
@@ -673,6 +674,7 @@ function cardMonthlyByType(entries) {
         <div style="width:100%;height:100%;display:flex;flex-direction:column-reverse;border-radius:4px 4px 0 0;overflow:hidden">${segs}</div>
       </div>
       <div class="mb-lbl">${mLabels[i]}</div>
+      ${hStr?`<div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--muted2);text-align:center">${hStr}</div>`:'<div style="height:11px"></div>'}
     </div>`;
   }).join('');
 
