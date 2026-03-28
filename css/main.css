@@ -335,7 +335,7 @@ body { isolation: isolate; font-family: 'Raleway', sans-serif; font-size: 15px; 
 .gdt-tag-x:hover { opacity:1; }
 .gdt-arrow { margin-left:auto; color:var(--muted); font-size:10px; flex-shrink:0; }
 .genre-dropdown-panel {
-  display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
+  display:none; position:absolute; bottom:calc(100% + 4px); top:auto; left:0; right:0;
   background:var(--bg1); border:1px solid var(--border2); border-radius:10px;
   box-shadow:0 8px 30px rgba(0,0,0,0.5); z-index:600; overflow:hidden;
 }
