@@ -1,7 +1,7 @@
 // ===== CROSS-MONTH SERIAL SPLIT =====
 // For serials that span multiple months, distribute hours proportionally by days
 function getMonthlyHours(entries) {
-  const monthMins = {}; // { "2026-01": minutes, ... }
+  const monthMins = {};
   
   entries.forEach(e => {
     if (!e.dateEnd && !e.dateStart) return;
@@ -17,27 +17,41 @@ function getMonthlyHours(entries) {
     const endKey   = `${dEnd.getFullYear()}-${String(dEnd.getMonth()+1).padStart(2,'0')}`;
     
     if (!isSerial || startKey === endKey) {
-      // Same month or not a serial - count in end month
-      const key = endKey;
-      monthMins[key] = (monthMins[key] || 0) + totalMin;
+      monthMins[endKey] = (monthMins[endKey] || 0) + totalMin;
       return;
     }
     
-    // Cross-month serial: split proportionally by days
-    const totalDays = Math.round((dEnd - dStart) / 86400000) + 1;
-    let current = new Date(dStart);
-    const dayCount = {};
+    // Cross-month serial: 2 episodes/day for the ending month days
+    const eps = e.episodes || 0;
+    const minPerEp = eps > 0 ? totalMin / eps : 0;
+    const EPS_PER_DAY = 2;
     
-    for (let i = 0; i < totalDays; i++) {
-      const k = `${current.getFullYear()}-${String(current.getMonth()+1).padStart(2,'0')}`;
-      dayCount[k] = (dayCount[k] || 0) + 1;
-      current.setDate(current.getDate() + 1);
+    // Count days in ending month
+    const endMonthStart = new Date(dEnd.getFullYear(), dEnd.getMonth(), 1);
+    const daysInEndMonth = Math.round((dEnd - endMonthStart) / 86400000) + 1;
+    
+    if (eps > 0 && minPerEp > 0) {
+      // End month: 2 eps/day * days in end month (max = total eps)
+      const endEps = Math.min(eps, daysInEndMonth * EPS_PER_DAY);
+      const endMins = Math.round(endEps * minPerEp);
+      const startMins = totalMin - endMins;
+      
+      monthMins[endKey]   = (monthMins[endKey]   || 0) + endMins;
+      monthMins[startKey] = (monthMins[startKey] || 0) + startMins;
+    } else {
+      // No episode data - split proportionally by days
+      const totalDays = Math.round((dEnd - dStart) / 86400000) + 1;
+      let current = new Date(dStart);
+      const dayCount = {};
+      for (let i = 0; i < totalDays; i++) {
+        const k = `${current.getFullYear()}-${String(current.getMonth()+1).padStart(2,'0')}`;
+        dayCount[k] = (dayCount[k] || 0) + 1;
+        current.setDate(current.getDate() + 1);
+      }
+      Object.entries(dayCount).forEach(([k, days]) => {
+        monthMins[k] = (monthMins[k] || 0) + Math.round(days / totalDays * totalMin);
+      });
     }
-    
-    Object.entries(dayCount).forEach(([k, days]) => {
-      const mins = Math.round(days / totalDays * totalMin);
-      monthMins[k] = (monthMins[k] || 0) + mins;
-    });
   });
   
   return monthMins;
@@ -367,8 +381,11 @@ function cardMonthlyByType(entries) {
     const hVal=Math.round(mHours[i]);
     const hStr=hVal?`${hVal}г`:'';
     const segs=tc.filter(t=>m[t.key]).map(t=>{
-      const h=Math.max(3,Math.round((m[t.key]/maxTot)*BAR_H));
-      return `<div style="height:${h}px;background:${t.color};width:100%"></div>`;
+      const px=Math.max(3,Math.round((m[t.key]/maxTot)*BAR_H));
+      const showLabel = px >= 16 && m[t.key] > 0;
+      return `<div style="height:${px}px;background:${t.color};width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden">
+        ${showLabel ? `<span style="font-size:9px;font-weight:700;color:rgba(0,0,0,0.7);line-height:1">${m[t.key]}</span>` : ''}
+      </div>`;
     }).join('');
     return `<div class="sb-col">
       <div class="mb-v">${total}</div>
@@ -716,8 +733,11 @@ function cardMonthlyByType(entries) {
     const hVal=Math.round(mHours[i]);
     const hStr=hVal?`${hVal}г`:'';
     const segs=tc.filter(t=>m[t.key]).map(t=>{
-      const h=Math.max(3,Math.round((m[t.key]/maxTot)*BAR_H));
-      return `<div style="height:${h}px;background:${t.color};width:100%"></div>`;
+      const px=Math.max(3,Math.round((m[t.key]/maxTot)*BAR_H));
+      const showLabel = px >= 16 && m[t.key] > 0;
+      return `<div style="height:${px}px;background:${t.color};width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden">
+        ${showLabel ? `<span style="font-size:9px;font-weight:700;color:rgba(0,0,0,0.7);line-height:1">${m[t.key]}</span>` : ''}
+      </div>`;
     }).join('');
     return `<div class="sb-col">
       <div class="mb-v">${total}</div>
