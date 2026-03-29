@@ -433,12 +433,17 @@ var SUPABASE_URL  = 'https://cteduqvxfppgpfhywsgw.supabase.co';
 var SUPABASE_ANON = 'sb_publishable_NzotSPs6eBpFMmPMoNAgBQ_YalSVyzy';
 var USE_SUPABASE  = true;
 var SB = null;
+var OMDB_KEY_DEFAULT = '57a883f0';
 function initSupabase() {
   if (window.supabase && USE_SUPABASE) {
     SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
     console.log('Supabase OK');
   } else {
     USE_SUPABASE = false;
+  }
+  // Ensure OMDB key is always available
+  if (!localStorage.getItem('il_omdb_key')) {
+    localStorage.setItem('il_omdb_key', OMDB_KEY_DEFAULT);
   }
 }
 </script>
