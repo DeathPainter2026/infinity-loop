@@ -289,7 +289,7 @@ function onStatusChange() {
 // ===== OMDB =====
 async function fetchOMDB() {
   const name = document.getElementById('fName').value.trim();
-  const key = getSettings().omdbKey;
+  const key = getSettings().omdbKey || localStorage.getItem('il_omdb_key') || (typeof OMDB_KEY_DEFAULT !== 'undefined' ? OMDB_KEY_DEFAULT : '');
   if (!name || !key) return;
   try {
     const res = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(name)}&apikey=${key}&type=movie`);
@@ -466,7 +466,7 @@ async function saveEntry() {
 const _origFetchOMDB = fetchOMDB;
 fetchOMDB = async function() {
   const name = document.getElementById('fName').value.trim();
-  const key = getSettings().omdbKey;
+  const key = getSettings().omdbKey || localStorage.getItem('il_omdb_key') || (typeof OMDB_KEY_DEFAULT !== 'undefined' ? OMDB_KEY_DEFAULT : '');
   if (!name || !key) return;
   try {
     const res = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(name)}&apikey=${key}`);

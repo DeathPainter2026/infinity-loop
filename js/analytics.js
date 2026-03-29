@@ -381,10 +381,54 @@ function cardMonthlyByType(entries) {
     </div>`;
   }).join('');
 
+  // Build hours breakdown table per month per type
+  const typeHours = {};
+  entries.forEach(e => {
+    const d = new Date(e.dateEnd || e.dateStart);
+    if (isNaN(d)) return;
+    const mi = d.getMonth();
+    const y = d.getFullYear();
+    const curY3 = new Date().getFullYear();
+    if (y !== curY3) return;
+    if (!typeHours[mi]) typeHours[mi] = {};
+    typeHours[mi][e.type] = (typeHours[mi][e.type] || 0) + parseDurationMinutes(e.dur || '') / 60;
+  });
+
+  const usedTypes = tc.filter(t => entries.some(e => e.type === t.key));
+  
+  const tableRows = activeIdx.filter(i => Object.values(mData[i]).reduce((a,b)=>a+b,0) > 0).map(i => {
+    const totalH = Math.round(mHours[i]);
+    const typeCells = usedTypes.map(t => {
+      const h = Math.round(typeHours[i]?.[t.key] || 0);
+      return `<td style="text-align:center;padding:5px 6px;font-family:'JetBrains Mono',monospace;font-size:11px;color:${h ? t.color : 'var(--muted)'}">${h ? h+'г' : '—'}</td>`;
+    }).join('');
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:5px 8px;font-size:12px;color:var(--text);white-space:nowrap">${mLabels[i]}</td>
+      <td style="padding:5px 8px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--accent)">${totalH}г</td>
+      ${typeCells}
+    </tr>`;
+  }).join('');
+
+  const tableHeaders = usedTypes.map(t => 
+    `<th style="padding:5px 6px;font-size:9px;text-align:center;color:${t.color};font-weight:600;letter-spacing:0.5px">${t.label.split(' ')[0]}</th>`
+  ).join('');
+
   return `<div class="an-card">
     <div class="an-ttl"><span>📆</span> Типи по місяцях</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">${legend}</div>
-    <div style="display:flex;align-items:flex-end;gap:8px">${cols}</div>
+    <div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:20px">${cols}</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border2)">
+            <th style="padding:5px 8px;text-align:left;font-size:10px;color:var(--muted);font-weight:600">Місяць</th>
+            <th style="padding:5px 8px;font-size:10px;color:var(--muted);font-weight:600">Всього</th>
+            ${tableHeaders}
+          </tr>
+        </thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>
   </div>`;
 }// ===== FUN FACTS (TOP) =====
 function cardFunFacts(entries) {
@@ -686,10 +730,54 @@ function cardMonthlyByType(entries) {
     </div>`;
   }).join('');
 
+  // Build hours breakdown table per month per type
+  const typeHours = {};
+  entries.forEach(e => {
+    const d = new Date(e.dateEnd || e.dateStart);
+    if (isNaN(d)) return;
+    const mi = d.getMonth();
+    const y = d.getFullYear();
+    const curY3 = new Date().getFullYear();
+    if (y !== curY3) return;
+    if (!typeHours[mi]) typeHours[mi] = {};
+    typeHours[mi][e.type] = (typeHours[mi][e.type] || 0) + parseDurationMinutes(e.dur || '') / 60;
+  });
+
+  const usedTypes = tc.filter(t => entries.some(e => e.type === t.key));
+  
+  const tableRows = activeIdx.filter(i => Object.values(mData[i]).reduce((a,b)=>a+b,0) > 0).map(i => {
+    const totalH = Math.round(mHours[i]);
+    const typeCells = usedTypes.map(t => {
+      const h = Math.round(typeHours[i]?.[t.key] || 0);
+      return `<td style="text-align:center;padding:5px 6px;font-family:'JetBrains Mono',monospace;font-size:11px;color:${h ? t.color : 'var(--muted)'}">${h ? h+'г' : '—'}</td>`;
+    }).join('');
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:5px 8px;font-size:12px;color:var(--text);white-space:nowrap">${mLabels[i]}</td>
+      <td style="padding:5px 8px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--accent)">${totalH}г</td>
+      ${typeCells}
+    </tr>`;
+  }).join('');
+
+  const tableHeaders = usedTypes.map(t => 
+    `<th style="padding:5px 6px;font-size:9px;text-align:center;color:${t.color};font-weight:600;letter-spacing:0.5px">${t.label.split(' ')[0]}</th>`
+  ).join('');
+
   return `<div class="an-card">
     <div class="an-ttl"><span>📆</span> Типи по місяцях</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">${legend}</div>
-    <div style="display:flex;align-items:flex-end;gap:8px">${cols}</div>
+    <div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:20px">${cols}</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border2)">
+            <th style="padding:5px 8px;text-align:left;font-size:10px;color:var(--muted);font-weight:600">Місяць</th>
+            <th style="padding:5px 8px;font-size:10px;color:var(--muted);font-weight:600">Всього</th>
+            ${tableHeaders}
+          </tr>
+        </thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>
   </div>`;
 }
 
