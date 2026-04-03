@@ -105,7 +105,7 @@ function renderTable() {
     const [sc,si,sn] = getStatusInfo(e.status);
     const rc = getRatingClass(e.rating, e.fire);
     const rLabel = e.fire ? (e.rating?`${e.rating}🔥`:'🔥') : (e.rating||'—');
-    const genres = (e.genres||[]).map(g=>`<span class="g-tag">${g}</span>`).join('');
+    const genres = [...(e.genres||[])].sort((a,b)=>a.localeCompare(b,'uk')).map(g=>`<span class="g-tag">${g}</span>`).join('');
     const dateD = e.dateStart
       ? (e.dateEnd&&e.dateEnd!==e.dateStart ? `${formatDate(e.dateStart)}–${formatDate(e.dateEnd)}` : formatDate(e.dateStart))
       : '—';
@@ -221,9 +221,9 @@ function refreshGenreFilters() {
   // Build genre list from actual entries to guarantee exact match
   const fromEntries = [...new Set(
     getEntries().flatMap(e => e.genres || [])
-  )].sort();
-  // Merge with genres table (for genres not yet used)
-  const allGenres = [...new Set([...getGenres(), ...fromEntries])].sort();
+  )];
+  // Only show genres that exist in entries, sorted alphabetically
+  const allGenres = [...new Set(fromEntries)].sort((a,b)=>a.localeCompare(b,'uk'));
   c.innerHTML = `<button class="gf${_genre==='all'?' active':''}" onclick="setGenre('all',this)">Всі</button>`
     + allGenres.map(g=>`<button class="gf${_genre===g?' active':''}" onclick="setGenre('${g.replace(/'/g,"\\'")}',this)">${g}</button>`).join('');
 }
@@ -368,7 +368,7 @@ function renderGenreDropdown(filter='') {
   } else {
     placeholder.style.display='none';
     const arrow = document.getElementById('genreArrow');
-    _selectedGenres.forEach(g=>{
+    [..._selectedGenres].sort((a,b)=>a.localeCompare(b,'uk')).forEach(g=>{
       const tag = document.createElement('span');
       tag.className='gdt-tag';
       tag.innerHTML=`${g}<span class="gdt-tag-x" onclick="event.stopPropagation();removeGenreTag('${g}')">×</span>`;
@@ -377,7 +377,9 @@ function renderGenreDropdown(filter='') {
   }
 
   // Render list
-  const genres = getGenres().filter(g=>!filter||g.toLowerCase().includes(filter.toLowerCase()));
+  const genres = getGenres()
+    .filter(g=>!filter||g.toLowerCase().includes(filter.toLowerCase()))
+    .sort((a,b)=>a.localeCompare(b,'uk'));
   panel.innerHTML = genres.map(g=>{
     const sel = _selectedGenres.includes(g);
     return `<div class="gdp-item${sel?' selected':''}" onclick="toggleGenreItem('${g}')">
@@ -435,9 +437,10 @@ function filterGenreDropdown(val) { renderGenreDropdown(val); }
 // Override saveEntry to use _selectedGenres
 async function saveEntry() {
   const id = document.getElementById('fId').value;
-  const genres = _selectedGenres.length > 0
+  const genres = (_selectedGenres.length > 0
     ? _selectedGenres
-    : document.getElementById('fGenres').value.split(',').map(g=>g.trim()).filter(Boolean);
+    : document.getElementById('fGenres').value.split(',').map(g=>g.trim()).filter(Boolean)
+  ).sort((a,b)=>a.localeCompare(b,'uk'));
   const rating = parseInt(document.getElementById('fRating').value)||null;
   const fire = document.getElementById('fFire').checked;
   const type = document.getElementById('fType').value;

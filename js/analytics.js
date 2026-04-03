@@ -342,6 +342,150 @@ function cardHoursLineChart(entries) {
 function cardMonthlyByType(entries) {
   const mLabels=['Січ','Лют','Бер','Кві','Тра','Чер','Лип','Сер','Вер','Жов','Лис','Гру'];
   const tc=typeConfig();
+  const now = new Date();
+  const curM = now.getMonth();
+  const curY = now.getFullYear();
+
+  // Count by month and type
+  const mData=Array(12).fill(null).map(()=>({}));
+  entries.forEach(e=>{
+    const d=new Date(e.dateEnd||e.dateStart);
+    if(isNaN(d)||d.getFullYear()!==curY) return;
+    const m=d.getMonth();
+    mData[m][e.type]=(mData[m][e.type]||0)+1;
+  });
+
+  // Only months up to current
+  const activeIdx=Array.from({length:curM+1},(_,i)=>i).filter(i=>Object.values(mData[i]).reduce((a,b)=>a+b,0)>0);
+  if(!activeIdx.length) return `<div class="an-card"><div class="an-ttl"><span>📆</span> Типи по місяцях</div><div style="color:var(--muted);padding:20px 0">Немає даних</div></div>`;
+
+  // Hours using 2eps/day logic
+  const monthlyMins = getMonthlyHours(entries);
+  const mHours=Array(12).fill(0);
+  Object.entries(monthlyMins).forEach(([k,mins])=>{
+    const [y,m]=k.split('-').map(Number);
+    if(y===curY&&m>=1&&m<=12) mHours[m-1]+=mins/60;
+  });
+
+  // Used types
+  const usedTypes = tc.filter(t=>entries.some(e=>e.type===t.key));
+
+  // Build table rows — one row per month
+  const rows = activeIdx.map(i=>{
+    const total = Object.values(mData[i]).reduce((a,b)=>a+b,0);
+    const hVal = Math.round(mHours[i]);
+    const typeCells = usedTypes.map(t=>{
+      const cnt = mData[i][t.key]||0;
+      return `<td style="text-align:center;padding:6px 8px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:${cnt?'600':'400'};color:${cnt?t.color:'var(--muted)'}">
+        ${cnt||'—'}
+      </td>`;
+    }).join('');
+    return `<tr style="border-bottom:1px solid rgba(var(--border-rgb),0.5)">
+      <td style="padding:7px 10px;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap">${mLabels[i]}</td>
+      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--accent)">${total}</td>
+      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted2)">${hVal?hVal+'г':'—'}</td>
+      ${typeCells}
+    </tr>`;
+  }).join('');
+
+  const typeHeaders = usedTypes.map(t=>
+    `<th style="padding:6px 8px;font-size:10px;text-align:center;color:${t.color};font-weight:700;white-space:nowrap">${t.label}</th>`
+  ).join('');
+
+  return `<div class="an-card">
+    <div class="an-ttl"><span>📆</span> Типи по місяцях</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border2)">
+            <th style="padding:6px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600">Місяць</th>
+            <th style="padding:6px 10px;font-size:11px;color:var(--muted);font-weight:600">Всього</th>
+            <th style="padding:6px 10px;font-size:11px;color:var(--muted);font-weight:600">Годин</th>
+            ${typeHeaders}
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+
+// ===== HOURS LINE CHART =====
+function cardHoursLineChart(entries) {
+  const mLabels=['Січ','Лют','Бер','Кві','Тра','Чер','Лип','Сер','Вер','Жов','Лис','Гру'];
+  const now = new Date();
+  const curM = now.getMonth();
+  const curY = now.getFullYear();
+
+  const monthlyMins = getMonthlyHours(entries);
+  const mHours = Array(12).fill(0);
+  Object.entries(monthlyMins).forEach(([k, mins]) => {
+    const [y, m] = k.split('-').map(Number);
+    if (y === curY && m >= 1 && m <= 12) mHours[m-1] += mins / 60;
+  });
+
+  // Only show months up to current month (not future)
+  const activeMonths = mLabels.slice(0, curM + 1);
+  const activeHours = mHours.slice(0, curM + 1);
+  const maxH = Math.max(...activeHours, 1);
+  const n = activeMonths.length;
+
+  // SVG line chart
+  const W = 800, H = 120, padL = 40, padR = 20, padT = 10, padB = 28;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  // Points
+  const pts = activeHours.map((h, i) => {
+    const x = padL + (n === 1 ? chartW/2 : (i / (n - 1)) * chartW);
+    const y = padT + chartH - (h / maxH) * chartH;
+    return { x, y, h };
+  });
+
+  const linePath = pts.map((p, i) => `${i===0?'M':'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const areaPath = `${linePath} L${pts[pts.length-1].x.toFixed(1)},${(padT+chartH).toFixed(1)} L${pts[0].x.toFixed(1)},${(padT+chartH).toFixed(1)} Z`;
+
+  // Y axis labels
+  const yLabels = [0, Math.round(maxH/2), Math.round(maxH)].map(v => {
+    const y = padT + chartH - (v / maxH) * chartH;
+    return `<text x="${padL-6}" y="${y+4}" text-anchor="end" font-size="9" fill="var(--muted)">${v}г</text>
+    <line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="var(--border)" stroke-width="1" opacity="0.5"/>`;
+  }).join('');
+
+  // X labels and dots
+  const xElements = pts.map((p, i) => `
+    <text x="${p.x.toFixed(1)}" y="${(padT+chartH+16).toFixed(1)}" text-anchor="middle" font-size="9" fill="var(--muted)">${activeMonths[i]}</text>
+    <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="var(--accent)" stroke="var(--bg1)" stroke-width="2"/>
+    ${p.h > 0 ? `<text x="${p.x.toFixed(1)}" y="${(p.y-9).toFixed(1)}" text-anchor="middle" font-size="9" fill="var(--accent-light)" font-family="'JetBrains Mono',monospace">${Math.round(p.h)}г</text>` : ''}
+  `).join('');
+
+  const totalH = Math.round(activeHours.reduce((a,b)=>a+b,0));
+
+  return `<div class="an-card span2" style="overflow:hidden">
+    <div class="an-ttl" style="display:flex;align-items:center;justify-content:space-between">
+      <span>📈 Години по місяцях ${curY}</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent)">${totalH}г всього</span>
+    </div>
+    <svg width="100%" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="overflow:visible">
+      ${yLabels}
+      <defs>
+        <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"/>
+        </linearGradient>
+      </defs>
+      <path d="${areaPath}" fill="url(#lineGrad)"/>
+      <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>
+      ${xElements}
+    </svg>
+  </div>`;
+}
+
+// ===== MONTHLY BY TYPE (full width, fixed) =====
+function cardMonthlyByType(entries) {
+  const mLabels=['Січ','Лют','Бер','Кві','Тра','Чер','Лип','Сер','Вер','Жов','Лис','Гру'];
+  const tc=typeConfig();
   const tColors={};
   tc.forEach(t=>tColors[t.key]=t.color);
   const tNames={};
@@ -378,16 +522,15 @@ function cardMonthlyByType(entries) {
     const m=mData[i];
     const total=Object.values(m).reduce((a,b)=>a+b,0);
     if(!total) return '';
-    const hVal=Math.round(mHours[i]);
-    const hStr=hVal?`${hVal}г`:'';
+
     // Build stacked segments with labels inside if space allows
     const typeEntries = tc.filter(t=>m[t.key]);
     const segs = typeEntries.map(t=>{
       const px=Math.max(4,Math.round((m[t.key]/maxTot)*BAR_H));
       const count = m[t.key];
       const showLabel = px >= 14;
-      return `<div style="height:${px}px;background:${t.color};width:100%;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
-        ${showLabel ? `<span style="font-size:8px;font-weight:700;color:rgba(0,0,0,0.75);line-height:1;pointer-events:none">${count}</span>` : ''}
+      return `<div style="height:${px}px;background:${t.color};width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+        ${showLabel ? `<span style="font-size:8px;font-weight:700;color:rgba(0,0,0,0.75);line-height:1">${count}</span>` : ''}
       </div>`;
     }).join('');
     return `<div class="sb-col">
@@ -397,7 +540,6 @@ function cardMonthlyByType(entries) {
         ${hStr?`<div style="position:absolute;bottom:3px;left:0;right:0;text-align:center;font-size:9px;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.8);pointer-events:none">${hStr}</div>`:''}
       </div>
       <div class="mb-lbl">${mLabels[i]}</div>
-      ${hStr?`<div style="font-size:8px;color:var(--muted2);text-align:center;margin-top:1px">${hStr}</div>`:'<div style="height:10px"></div>'}
     </div>`;
   }).join('');
 
@@ -759,16 +901,15 @@ function cardMonthlyByType(entries) {
     const m=mData[i];
     const total=Object.values(m).reduce((a,b)=>a+b,0);
     if(!total) return '';
-    const hVal=Math.round(mHours[i]);
-    const hStr=hVal?`${hVal}г`:'';
+
     // Build stacked segments with labels inside if space allows
     const typeEntries = tc.filter(t=>m[t.key]);
     const segs = typeEntries.map(t=>{
       const px=Math.max(4,Math.round((m[t.key]/maxTot)*BAR_H));
       const count = m[t.key];
       const showLabel = px >= 14;
-      return `<div style="height:${px}px;background:${t.color};width:100%;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
-        ${showLabel ? `<span style="font-size:8px;font-weight:700;color:rgba(0,0,0,0.75);line-height:1;pointer-events:none">${count}</span>` : ''}
+      return `<div style="height:${px}px;background:${t.color};width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+        ${showLabel ? `<span style="font-size:8px;font-weight:700;color:rgba(0,0,0,0.75);line-height:1">${count}</span>` : ''}
       </div>`;
     }).join('');
     return `<div class="sb-col">
@@ -778,7 +919,6 @@ function cardMonthlyByType(entries) {
         ${hStr?`<div style="position:absolute;bottom:3px;left:0;right:0;text-align:center;font-size:9px;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.8);pointer-events:none">${hStr}</div>`:''}
       </div>
       <div class="mb-lbl">${mLabels[i]}</div>
-      ${hStr?`<div style="font-size:8px;color:var(--muted2);text-align:center;margin-top:1px">${hStr}</div>`:'<div style="height:10px"></div>'}
     </div>`;
   }).join('');
 
