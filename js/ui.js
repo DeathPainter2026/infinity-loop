@@ -464,6 +464,57 @@ async function saveEntry() {
 
 // Also patch fetchOMDB to set genres via _selectedGenres
 const _origFetchOMDB = fetchOMDB;
+
+// ===== OMDB GENRE TRANSLATION =====
+const OMDB_GENRES = {
+  'Action': 'Екшн',
+  'Adventure': 'Пригоди',
+  'Animation': 'Анімація',
+  'Biography': 'Біографія',
+  'Comedy': 'Комедія',
+  'Crime': 'Детектив',
+  'Documentary': 'Документальний',
+  'Drama': 'Драма',
+  'Family': 'Сімейний',
+  'Fantasy': 'Фентезі',
+  'Film-Noir': 'Нуар',
+  'History': 'Історичний',
+  'Horror': 'Жахи',
+  'Music': 'Музичний',
+  'Musical': 'Мюзикл',
+  'Mystery': 'Детектив',
+  'Romance': 'Романтика',
+  'Sci-Fi': 'Наукова фантастика',
+  'Science Fiction': 'Наукова фантастика',
+  'Short': 'Короткометражка',
+  'Sport': 'Спорт',
+  'Superhero': 'Супергерої',
+  'Thriller': 'Трилер',
+  'War': 'Воєнний',
+  'Western': 'Вестерн',
+  'Anime': 'Аніме',
+  'Supernatural': 'Надприродне',
+  'Psychological': 'Психологічний трилер',
+  'Mecha': 'Меха',
+  'Shounen': 'Сьонен',
+  'Seinen': 'Сейнен',
+  'Isekai': 'Ісекай',
+  'Post-Apocalyptic': 'Постапокаліпсис',
+  'Dystopia': 'Антиутопія',
+  'Cyberpunk': 'Кіберпанк',
+  'Dark Fantasy': 'Темне фентезі',
+  'Catastrophe': 'Катастрофа',
+  'Disaster': 'Катастрофа',
+};
+
+function translateGenres(genreStr) {
+  if (!genreStr) return [];
+  return genreStr.split(',').map(g => {
+    const trimmed = g.trim();
+    return OMDB_GENRES[trimmed] || trimmed;
+  }).filter(Boolean);
+}
+
 fetchOMDB = async function() {
   const name = document.getElementById('fName').value.trim();
   const key = getSettings().omdbKey || localStorage.getItem('il_omdb_key') || (typeof OMDB_KEY_DEFAULT !== 'undefined' ? OMDB_KEY_DEFAULT : '');
@@ -476,7 +527,7 @@ fetchOMDB = async function() {
       if (!document.getElementById('fImdb').value && d.imdbRating&&d.imdbRating!=='N/A')
         document.getElementById('fImdb').value=parseFloat(d.imdbRating)||'';
       if (_selectedGenres.length===0 && d.Genre) {
-        _selectedGenres = d.Genre.split(',').map(g=>g.trim()).filter(Boolean);
+        _selectedGenres = translateGenres(d.Genre);
         renderGenreDropdown();
       }
       if (!document.getElementById('fDur').value && d.Runtime&&d.Runtime!=='N/A') {

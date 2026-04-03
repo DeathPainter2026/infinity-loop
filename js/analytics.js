@@ -380,11 +380,14 @@ function cardMonthlyByType(entries) {
     if(!total) return '';
     const hVal=Math.round(mHours[i]);
     const hStr=hVal?`${hVal}г`:'';
-    const segs=tc.filter(t=>m[t.key]).map(t=>{
-      const px=Math.max(3,Math.round((m[t.key]/maxTot)*BAR_H));
-      const showLabel = px >= 16 && m[t.key] > 0;
-      return `<div style="height:${px}px;background:${t.color};width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden">
-        ${showLabel ? `<span style="font-size:9px;font-weight:700;color:rgba(0,0,0,0.7);line-height:1">${m[t.key]}</span>` : ''}
+    // Build stacked segments with labels inside if space allows
+    const typeEntries = tc.filter(t=>m[t.key]);
+    const segs = typeEntries.map(t=>{
+      const px=Math.max(4,Math.round((m[t.key]/maxTot)*BAR_H));
+      const count = m[t.key];
+      const showLabel = px >= 14;
+      return `<div style="height:${px}px;background:${t.color};width:100%;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+        ${showLabel ? `<span style="font-size:8px;font-weight:700;color:rgba(0,0,0,0.75);line-height:1;pointer-events:none">${count}</span>` : ''}
       </div>`;
     }).join('');
     return `<div class="sb-col">
@@ -398,17 +401,43 @@ function cardMonthlyByType(entries) {
     </div>`;
   }).join('');
 
-  // Build hours breakdown table per month per type
+  // Build hours breakdown table per month per type using same 2eps/day logic
   const typeHours = {};
   entries.forEach(e => {
-    const d = new Date(e.dateEnd || e.dateStart);
-    if (isNaN(d)) return;
-    const mi = d.getMonth();
-    const y = d.getFullYear();
+    if (!e.dateEnd && !e.dateStart) return;
+    const totalMin = parseDurationMinutes(e.dur || '');
+    if (!totalMin) return;
+    const dEnd = new Date(e.dateEnd || e.dateStart);
+    const dStart = new Date(e.dateStart || e.dateEnd);
+    if (isNaN(dEnd)) return;
     const curY3 = new Date().getFullYear();
-    if (y !== curY3) return;
-    if (!typeHours[mi]) typeHours[mi] = {};
-    typeHours[mi][e.type] = (typeHours[mi][e.type] || 0) + parseDurationMinutes(e.dur || '') / 60;
+    if (dEnd.getFullYear() !== curY3 && dStart.getFullYear() !== curY3) return;
+
+    const isSerial = ['serial','anime-serial','mult-serial'].includes(e.type);
+    const endKey = `${dEnd.getFullYear()}-${String(dEnd.getMonth()+1).padStart(2,'0')}`;
+    const startKey = dStart ? `${dStart.getFullYear()}-${String(dStart.getMonth()+1).padStart(2,'0')}` : endKey;
+
+    const addHours = (monthKey, mins) => {
+      const mi = parseInt(monthKey.split('-')[1]) - 1;
+      if (!typeHours[mi]) typeHours[mi] = {};
+      typeHours[mi][e.type] = (typeHours[mi][e.type] || 0) + mins / 60;
+    };
+
+    if (!isSerial || startKey === endKey) {
+      addHours(endKey, totalMin);
+    } else {
+      const eps = e.episodes || 0;
+      if (eps > 0) {
+        const minPerEp = totalMin / eps;
+        const endMonthStart = new Date(dEnd.getFullYear(), dEnd.getMonth(), 1);
+        const daysInEnd = Math.round((dEnd - endMonthStart) / 86400000) + 1;
+        const endEps = Math.min(eps, daysInEnd * 2);
+        addHours(endKey, Math.round(endEps * minPerEp));
+        addHours(startKey, totalMin - Math.round(endEps * minPerEp));
+      } else {
+        addHours(endKey, totalMin);
+      }
+    }
   });
 
   const usedTypes = tc.filter(t => entries.some(e => e.type === t.key));
@@ -732,11 +761,14 @@ function cardMonthlyByType(entries) {
     if(!total) return '';
     const hVal=Math.round(mHours[i]);
     const hStr=hVal?`${hVal}г`:'';
-    const segs=tc.filter(t=>m[t.key]).map(t=>{
-      const px=Math.max(3,Math.round((m[t.key]/maxTot)*BAR_H));
-      const showLabel = px >= 16 && m[t.key] > 0;
-      return `<div style="height:${px}px;background:${t.color};width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden">
-        ${showLabel ? `<span style="font-size:9px;font-weight:700;color:rgba(0,0,0,0.7);line-height:1">${m[t.key]}</span>` : ''}
+    // Build stacked segments with labels inside if space allows
+    const typeEntries = tc.filter(t=>m[t.key]);
+    const segs = typeEntries.map(t=>{
+      const px=Math.max(4,Math.round((m[t.key]/maxTot)*BAR_H));
+      const count = m[t.key];
+      const showLabel = px >= 14;
+      return `<div style="height:${px}px;background:${t.color};width:100%;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+        ${showLabel ? `<span style="font-size:8px;font-weight:700;color:rgba(0,0,0,0.75);line-height:1;pointer-events:none">${count}</span>` : ''}
       </div>`;
     }).join('');
     return `<div class="sb-col">
@@ -750,17 +782,43 @@ function cardMonthlyByType(entries) {
     </div>`;
   }).join('');
 
-  // Build hours breakdown table per month per type
+  // Build hours breakdown table per month per type using same 2eps/day logic
   const typeHours = {};
   entries.forEach(e => {
-    const d = new Date(e.dateEnd || e.dateStart);
-    if (isNaN(d)) return;
-    const mi = d.getMonth();
-    const y = d.getFullYear();
+    if (!e.dateEnd && !e.dateStart) return;
+    const totalMin = parseDurationMinutes(e.dur || '');
+    if (!totalMin) return;
+    const dEnd = new Date(e.dateEnd || e.dateStart);
+    const dStart = new Date(e.dateStart || e.dateEnd);
+    if (isNaN(dEnd)) return;
     const curY3 = new Date().getFullYear();
-    if (y !== curY3) return;
-    if (!typeHours[mi]) typeHours[mi] = {};
-    typeHours[mi][e.type] = (typeHours[mi][e.type] || 0) + parseDurationMinutes(e.dur || '') / 60;
+    if (dEnd.getFullYear() !== curY3 && dStart.getFullYear() !== curY3) return;
+
+    const isSerial = ['serial','anime-serial','mult-serial'].includes(e.type);
+    const endKey = `${dEnd.getFullYear()}-${String(dEnd.getMonth()+1).padStart(2,'0')}`;
+    const startKey = dStart ? `${dStart.getFullYear()}-${String(dStart.getMonth()+1).padStart(2,'0')}` : endKey;
+
+    const addHours = (monthKey, mins) => {
+      const mi = parseInt(monthKey.split('-')[1]) - 1;
+      if (!typeHours[mi]) typeHours[mi] = {};
+      typeHours[mi][e.type] = (typeHours[mi][e.type] || 0) + mins / 60;
+    };
+
+    if (!isSerial || startKey === endKey) {
+      addHours(endKey, totalMin);
+    } else {
+      const eps = e.episodes || 0;
+      if (eps > 0) {
+        const minPerEp = totalMin / eps;
+        const endMonthStart = new Date(dEnd.getFullYear(), dEnd.getMonth(), 1);
+        const daysInEnd = Math.round((dEnd - endMonthStart) / 86400000) + 1;
+        const endEps = Math.min(eps, daysInEnd * 2);
+        addHours(endKey, Math.round(endEps * minPerEp));
+        addHours(startKey, totalMin - Math.round(endEps * minPerEp));
+      } else {
+        addHours(endKey, totalMin);
+      }
+    }
   });
 
   const usedTypes = tc.filter(t => entries.some(e => e.type === t.key));
