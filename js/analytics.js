@@ -370,14 +370,51 @@ function cardMonthlyByType(entries) {
   // Used types
   const usedTypes = tc.filter(t=>entries.some(e=>e.type===t.key));
 
+  // Hours per type per month using 2eps/day logic
+  const typeHours = {};
+  entries.forEach(e => {
+    if (!e.dateEnd && !e.dateStart) return;
+    const totalMin = parseDurationMinutes(e.dur || '');
+    if (!totalMin) return;
+    const dEnd = new Date(e.dateEnd || e.dateStart);
+    const dStart = new Date(e.dateStart || e.dateEnd);
+    if (isNaN(dEnd)) return;
+    const curY2 = new Date().getFullYear();
+    if (dEnd.getFullYear() !== curY2 && dStart.getFullYear() !== curY2) return;
+    const isSerial = ['serial','anime-serial','mult-serial'].includes(e.type);
+    const endM = dEnd.getMonth();
+    const startKey = `${dStart.getFullYear()}-${dStart.getMonth()}`;
+    const endKey = `${dEnd.getFullYear()}-${endM}`;
+    const addH = (mi, mins) => {
+      if (!typeHours[mi]) typeHours[mi] = {};
+      typeHours[mi][e.type] = (typeHours[mi][e.type]||0) + mins/60;
+    };
+    if (!isSerial || startKey === endKey) {
+      addH(endM, totalMin);
+    } else {
+      const eps = e.episodes||0;
+      if (eps > 0) {
+        const mPerEp = totalMin/eps;
+        const endMonthStart = new Date(dEnd.getFullYear(), dEnd.getMonth(), 1);
+        const daysInEnd = Math.round((dEnd-endMonthStart)/86400000)+1;
+        const endEps = Math.min(eps, daysInEnd*2);
+        addH(endM, Math.round(endEps*mPerEp));
+        addH(dStart.getMonth(), totalMin - Math.round(endEps*mPerEp));
+      } else {
+        addH(endM, totalMin);
+      }
+    }
+  });
+
   // Build table rows — one row per month
   const rows = activeIdx.map(i=>{
     const total = Object.values(mData[i]).reduce((a,b)=>a+b,0);
     const hVal = Math.round(mHours[i]);
     const typeCells = usedTypes.map(t=>{
       const cnt = mData[i][t.key]||0;
+      const th = Math.round(typeHours[i]?.[t.key]||0);
       return `<td style="text-align:center;padding:6px 8px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:${cnt?'600':'400'};color:${cnt?t.color:'var(--muted)'}">
-        ${cnt||'—'}
+        ${cnt ? `${cnt}<span style="font-size:10px;opacity:0.7"> (${th}г)</span>` : '—'}
       </td>`;
     }).join('');
     return `<tr style="border-bottom:1px solid rgba(var(--border-rgb),0.5)">
