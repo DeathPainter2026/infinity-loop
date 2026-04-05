@@ -1,7 +1,7 @@
 // ===== CROSS-MONTH SERIAL SPLIT =====
 // For serials that span multiple months, distribute hours proportionally by days
 function getMonthlyHours(entries) {
-  const monthMins = {};
+  const monthMins = {}; // { "2026-01": minutes, ... }
   
   entries.forEach(e => {
     if (!e.dateEnd && !e.dateStart) return;
@@ -17,47 +17,98 @@ function getMonthlyHours(entries) {
     const endKey   = `${dEnd.getFullYear()}-${String(dEnd.getMonth()+1).padStart(2,'0')}`;
     
     if (!isSerial || startKey === endKey) {
-      monthMins[endKey] = (monthMins[endKey] || 0) + totalMin;
+      // Same month or not a serial - count in end month
+      const key = endKey;
+      monthMins[key] = (monthMins[key] || 0) + totalMin;
       return;
     }
     
-    // Cross-month serial: 2 episodes/day for the ending month days
-    const eps = e.episodes || 0;
-    const minPerEp = eps > 0 ? totalMin / eps : 0;
-    const EPS_PER_DAY = 2;
+    // Cross-month serial: split proportionally by days
+    const totalDays = Math.round((dEnd - dStart) / 86400000) + 1;
+    let current = new Date(dStart);
+    const dayCount = {};
     
-    // Count days in ending month
-    const endMonthStart = new Date(dEnd.getFullYear(), dEnd.getMonth(), 1);
-    const daysInEndMonth = Math.round((dEnd - endMonthStart) / 86400000) + 1;
-    
-    if (eps > 0 && minPerEp > 0) {
-      // End month: 2 eps/day * days in end month (max = total eps)
-      const endEps = Math.min(eps, daysInEndMonth * EPS_PER_DAY);
-      const endMins = Math.round(endEps * minPerEp);
-      const startMins = totalMin - endMins;
-      
-      monthMins[endKey]   = (monthMins[endKey]   || 0) + endMins;
-      monthMins[startKey] = (monthMins[startKey] || 0) + startMins;
-    } else {
-      // No episode data - split proportionally by days
-      const totalDays = Math.round((dEnd - dStart) / 86400000) + 1;
-      let current = new Date(dStart);
-      const dayCount = {};
-      for (let i = 0; i < totalDays; i++) {
-        const k = `${current.getFullYear()}-${String(current.getMonth()+1).padStart(2,'0')}`;
-        dayCount[k] = (dayCount[k] || 0) + 1;
-        current.setDate(current.getDate() + 1);
-      }
-      Object.entries(dayCount).forEach(([k, days]) => {
-        monthMins[k] = (monthMins[k] || 0) + Math.round(days / totalDays * totalMin);
-      });
+    for (let i = 0; i < totalDays; i++) {
+      const k = `${current.getFullYear()}-${String(current.getMonth()+1).padStart(2,'0')}`;
+      dayCount[k] = (dayCount[k] || 0) + 1;
+      current.setDate(current.getDate() + 1);
     }
+    
+    Object.entries(dayCount).forEach(([k, days]) => {
+      const mins = Math.round(days / totalDays * totalMin);
+      monthMins[k] = (monthMins[k] || 0) + mins;
+    });
   });
   
   return monthMins;
 }
 
 // ===== INFINITY LOOP — ANALYTICS.JS =====
+
+
+// ===== QUICK FACTS (top - stat cards only) =====
+function cardQuickFacts(entries) {
+  const done = entries.filter(e=>e.status==='done');
+  const ratings = entries.filter(e=>e.rating).map(e=>e.rating);
+  const avg = ratings.length ? (ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1) : '—';
+  const fire = entries.filter(e=>e.fire).length;
+  const mc=Array(12).fill(0);
+  entries.forEach(e=>{if(e.dateEnd){const m=new Date(e.dateEnd).getMonth();if(m>=0&&m<12)mc[m]++;}});
+  const mNames=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+  const bestM = mNames[mc.indexOf(Math.max(...mc))]||'—';
+  let marathon='—', marScore=0;
+  entries.filter(e=>e.episodes&&e.dateStart&&e.dateEnd).forEach(e=>{
+    const days=Math.max(1,Math.round((new Date(e.dateEnd)-new Date(e.dateStart))/86400000)+1);
+    if(e.episodes/days>marScore){marScore=e.episodes/days;marathon=`${e.name} — ${e.episodes}ep за ${days}д`;}
+  });
+  const diffs=done.filter(e=>e.rating&&e.imdb).map(e=>e.rating-e.imdb);
+  const avgDiff=diffs.length?(+(diffs.reduce((a,b)=>a+b,0)/diffs.length).toFixed(1)):'—';
+  const avgDiffStr=avgDiff!=='—'?(avgDiff>=0?`+${avgDiff}`:String(avgDiff)):'—';
+  const cards=[
+    {icon:'✅',val:done.length,lbl:'переглянуто',color:'var(--c-done)'},
+    {icon:'🔥',val:fire,lbl:'шедеврів 10🔥',color:'#ff6b35'},
+    {icon:'⭐',val:avg,lbl:'середня оцінка',color:'var(--c-now)'},
+    {icon:'📅',val:bestM,lbl:'топ місяць',color:'var(--accent)'},
+    {icon:'🏆',val:marathon,lbl:'рекордний марафон',color:'var(--c-plan)'},
+    {icon:'📊',val:avgDiffStr,lbl:'моя оцінка vs IMDb',color:'var(--c-done)'},
+    {icon:'🎬',val:entries.filter(e=>e.type==='film').length,lbl:'фільмів',color:'#00bcd4'},
+    {icon:'⛩️',val:entries.filter(e=>e.type.includes('anime')).length,lbl:'аніме',color:'#f06292'},
+  ];
+  return `<div class="an-card">
+    <div class="fun-grid" style="grid-template-columns:repeat(4,1fr);gap:8px">
+      ${cards.map(c=>`<div class="fun-item">
+        <div class="fun-icon">${c.icon}</div>
+        <div class="fun-val" style="color:${c.color}">${c.val}</div>
+        <div class="fun-lbl">${c.lbl}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ===== TYPES SUMMARY (before monthly) =====
+function cardTypesSummary(entries) {
+  const tc=typeConfig();
+  const rows=tc.map(t=>{
+    const items=entries.filter(e=>e.type===t.key);
+    if(!items.length) return null;
+    let mins=0; items.forEach(e=>{mins+=parseDurationMinutes(e.dur||'');});
+    const h=Math.floor(mins/60),m=mins%60;
+    const durStr=mins?`${h}:${String(m).padStart(2,'0')}`:'—';
+    let extra='';
+    if(t.serial){
+      const seas=items.reduce((s,e)=>s+(e.seasons||0),0);
+      const eps=items.reduce((s,e)=>s+(e.episodes||0),0);
+      if(seas||eps) extra=` · ${seas?seas+'сез. ':''}${eps?eps+'ep':''}`;
+    }
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <div style="width:8px;height:8px;border-radius:50%;background:${t.color};flex-shrink:0"></div>
+      <span style="flex:1;font-size:12px">${t.label}</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${t.color};font-weight:600">${items.length}</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);min-width:60px;text-align:right">${durStr}${extra}</span>
+    </div>`;
+  }).filter(Boolean).join('');
+  return `<div class="an-card"><div class="an-ttl"><span>📊</span> Загальна статистика</div>${rows}</div>`;
+}
 
 function renderAnalytics() {
   const entries = getEntries();
@@ -71,8 +122,7 @@ function renderAnalytics() {
       ${cardComparison(done)}
     </div>
     <div style="margin-top:16px">${cardHoursLineChart(entries)}</div>
-    <div style="margin-top:16px">${cardMonthlyByType(entries)}</div>
-    ${cardByReleaseYear(entries)}`;
+    <div style="margin-top:16px">${cardMonthlyByType(entries)}</div>`;
 }
 
 function anCard(cls,icon,title,content) {
@@ -338,15 +388,15 @@ function cardHoursLineChart(entries) {
   </div>`;
 }
 
-// ===== MONTHLY BY TYPE (full width, fixed) =====
+
+// ===== MONTHLY BY TYPE =====
 function cardMonthlyByType(entries) {
   const mLabels=['Січ','Лют','Бер','Кві','Тра','Чер','Лип','Сер','Вер','Жов','Лис','Гру'];
   const tc=typeConfig();
-  const now = new Date();
-  const curM = now.getMonth();
-  const curY = now.getFullYear();
+  const now=new Date();
+  const curM=now.getMonth();
+  const curY=now.getFullYear();
 
-  // Count by month and type
   const mData=Array(12).fill(null).map(()=>({}));
   entries.forEach(e=>{
     const d=new Date(e.dateEnd||e.dateStart);
@@ -355,77 +405,66 @@ function cardMonthlyByType(entries) {
     mData[m][e.type]=(mData[m][e.type]||0)+1;
   });
 
-  // Only months up to current
   const activeIdx=Array.from({length:curM+1},(_,i)=>i).filter(i=>Object.values(mData[i]).reduce((a,b)=>a+b,0)>0);
   if(!activeIdx.length) return `<div class="an-card"><div class="an-ttl"><span>📆</span> Типи по місяцях</div><div style="color:var(--muted);padding:20px 0">Немає даних</div></div>`;
 
-  // Hours using 2eps/day logic
-  const monthlyMins = getMonthlyHours(entries);
+  const monthlyMins=getMonthlyHours(entries);
   const mHours=Array(12).fill(0);
   Object.entries(monthlyMins).forEach(([k,mins])=>{
     const [y,m]=k.split('-').map(Number);
     if(y===curY&&m>=1&&m<=12) mHours[m-1]+=mins/60;
   });
 
-  // Used types
-  const usedTypes = tc.filter(t=>entries.some(e=>e.type===t.key));
+  const usedTypes=tc.filter(t=>entries.some(e=>e.type===t.key));
 
-  // Hours per type per month using 2eps/day logic
-  const typeHours = {};
-  entries.forEach(e => {
-    if (!e.dateEnd && !e.dateStart) return;
-    const totalMin = parseDurationMinutes(e.dur || '');
-    if (!totalMin) return;
-    const dEnd = new Date(e.dateEnd || e.dateStart);
-    const dStart = new Date(e.dateStart || e.dateEnd);
-    if (isNaN(dEnd)) return;
-    const curY2 = new Date().getFullYear();
-    if (dEnd.getFullYear() !== curY2 && dStart.getFullYear() !== curY2) return;
-    const isSerial = ['serial','anime-serial','mult-serial'].includes(e.type);
-    const endM = dEnd.getMonth();
-    const startKey = `${dStart.getFullYear()}-${dStart.getMonth()}`;
-    const endKey = `${dEnd.getFullYear()}-${endM}`;
-    const addH = (mi, mins) => {
-      if (!typeHours[mi]) typeHours[mi] = {};
-      typeHours[mi][e.type] = (typeHours[mi][e.type]||0) + mins/60;
+  const typeHours={};
+  entries.forEach(e=>{
+    if(!e.dateEnd&&!e.dateStart) return;
+    const totalMin=parseDurationMinutes(e.dur||'');
+    if(!totalMin) return;
+    const dEnd=new Date(e.dateEnd||e.dateStart);
+    const dStart=new Date(e.dateStart||e.dateEnd);
+    if(isNaN(dEnd)) return;
+    if(dEnd.getFullYear()!==curY&&dStart.getFullYear()!==curY) return;
+    const isSerial=['serial','anime-serial','mult-serial'].includes(e.type);
+    const endM=dEnd.getMonth();
+    const addH=(mi,mins)=>{
+      if(!typeHours[mi]) typeHours[mi]={};
+      typeHours[mi][e.type]=(typeHours[mi][e.type]||0)+mins/60;
     };
-    if (!isSerial || startKey === endKey) {
-      addH(endM, totalMin);
+    if(!isSerial||dStart.getMonth()===endM){
+      addH(endM,totalMin);
     } else {
-      const eps = e.episodes||0;
-      if (eps > 0) {
-        const mPerEp = totalMin/eps;
-        const endMonthStart = new Date(dEnd.getFullYear(), dEnd.getMonth(), 1);
-        const daysInEnd = Math.round((dEnd-endMonthStart)/86400000)+1;
-        const endEps = Math.min(eps, daysInEnd*2);
-        addH(endM, Math.round(endEps*mPerEp));
-        addH(dStart.getMonth(), totalMin - Math.round(endEps*mPerEp));
-      } else {
-        addH(endM, totalMin);
-      }
+      const eps=e.episodes||0;
+      if(eps>0){
+        const mPerEp=totalMin/eps;
+        const endMonthStart=new Date(dEnd.getFullYear(),dEnd.getMonth(),1);
+        const daysInEnd=Math.round((dEnd-endMonthStart)/86400000)+1;
+        const endEps=Math.min(eps,daysInEnd*2);
+        addH(endM,Math.round(endEps*mPerEp));
+        addH(dStart.getMonth(),totalMin-Math.round(endEps*mPerEp));
+      } else { addH(endM,totalMin); }
     }
   });
 
-  // Build table rows — one row per month
-  const rows = activeIdx.map(i=>{
-    const total = Object.values(mData[i]).reduce((a,b)=>a+b,0);
-    const hVal = Math.round(mHours[i]);
-    const typeCells = usedTypes.map(t=>{
-      const cnt = mData[i][t.key]||0;
-      const th = Math.round(typeHours[i]?.[t.key]||0);
+  const rows=activeIdx.map(i=>{
+    const total=Object.values(mData[i]).reduce((a,b)=>a+b,0);
+    const hVal=Math.round(mHours[i]);
+    const typeCells=usedTypes.map(t=>{
+      const cnt=mData[i][t.key]||0;
+      const th=Math.round(typeHours[i]?.[t.key]||0);
       return `<td style="text-align:center;padding:6px 8px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:${cnt?'600':'400'};color:${cnt?t.color:'var(--muted)'}">
-        ${cnt ? `${cnt}<span style="font-size:10px;opacity:0.7"> (${th}г)</span>` : '—'}
+        ${cnt?`${cnt}<span style="font-size:9px;opacity:0.65"> (${th}г)</span>`:'—'}
       </td>`;
     }).join('');
-    return `<tr style="border-bottom:1px solid rgba(var(--border-rgb),0.5)">
-      <td style="padding:7px 10px;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap">${mLabels[i]}</td>
-      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--accent)">${total}</td>
-      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted2)">${hVal?hVal+'г':'—'}</td>
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:7px 10px;font-size:13px;font-weight:600;color:var(--text)">${mLabels[i]}</td>
+      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--accent)">${total} <span style="font-size:10px;opacity:0.7">(${hVal}г)</span></td>
       ${typeCells}
     </tr>`;
   }).join('');
 
-  const typeHeaders = usedTypes.map(t=>
+  const typeHeaders=usedTypes.map(t=>
     `<th style="padding:6px 8px;font-size:10px;text-align:center;color:${t.color};font-weight:700;white-space:nowrap">${t.label}</th>`
   ).join('');
 
@@ -435,9 +474,8 @@ function cardMonthlyByType(entries) {
       <table style="width:100%;border-collapse:collapse">
         <thead>
           <tr style="border-bottom:2px solid var(--border2)">
-            <th style="padding:6px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600">Місяць</th>
-            <th style="padding:6px 10px;font-size:11px;color:var(--muted);font-weight:600">Всього</th>
-            <th style="padding:6px 10px;font-size:11px;color:var(--muted);font-weight:600">Годин</th>
+            <th style="padding:6px 10px;text-align:left;font-size:10px;color:var(--muted);font-weight:600">Місяць</th>
+            <th style="padding:6px 10px;font-size:10px;color:var(--muted);font-weight:600">Всього</th>
             ${typeHeaders}
           </tr>
         </thead>
@@ -446,92 +484,25 @@ function cardMonthlyByType(entries) {
     </div>
   </div>`;
 }
+// ===== FUN FACTS (TOP) =====
+
+// ===== DONUT: COUNT =====
+
+// ===== DONUT: HOURS =====
+
+// ===== TOP GENRES =====
+
+// ===== COMPARISON =====
 
 
 // ===== HOURS LINE CHART =====
-function cardHoursLineChart(entries) {
-  const mLabels=['Січ','Лют','Бер','Кві','Тра','Чер','Лип','Сер','Вер','Жов','Лис','Гру'];
-  const now = new Date();
-  const curM = now.getMonth();
-  const curY = now.getFullYear();
-
-  const monthlyMins = getMonthlyHours(entries);
-  const mHours = Array(12).fill(0);
-  Object.entries(monthlyMins).forEach(([k, mins]) => {
-    const [y, m] = k.split('-').map(Number);
-    if (y === curY && m >= 1 && m <= 12) mHours[m-1] += mins / 60;
-  });
-
-  // Only show months up to current month (not future)
-  const activeMonths = mLabels.slice(0, curM + 1);
-  const activeHours = mHours.slice(0, curM + 1);
-  const maxH = Math.max(...activeHours, 1);
-  const n = activeMonths.length;
-
-  // SVG line chart
-  const W = 800, H = 120, padL = 40, padR = 20, padT = 10, padB = 28;
-  const chartW = W - padL - padR;
-  const chartH = H - padT - padB;
-
-  // Points
-  const pts = activeHours.map((h, i) => {
-    const x = padL + (n === 1 ? chartW/2 : (i / (n - 1)) * chartW);
-    const y = padT + chartH - (h / maxH) * chartH;
-    return { x, y, h };
-  });
-
-  const linePath = pts.map((p, i) => `${i===0?'M':'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-  const areaPath = `${linePath} L${pts[pts.length-1].x.toFixed(1)},${(padT+chartH).toFixed(1)} L${pts[0].x.toFixed(1)},${(padT+chartH).toFixed(1)} Z`;
-
-  // Y axis labels
-  const yLabels = [0, Math.round(maxH/2), Math.round(maxH)].map(v => {
-    const y = padT + chartH - (v / maxH) * chartH;
-    return `<text x="${padL-6}" y="${y+4}" text-anchor="end" font-size="9" fill="var(--muted)">${v}г</text>
-    <line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="var(--border)" stroke-width="1" opacity="0.5"/>`;
-  }).join('');
-
-  // X labels and dots
-  const xElements = pts.map((p, i) => `
-    <text x="${p.x.toFixed(1)}" y="${(padT+chartH+16).toFixed(1)}" text-anchor="middle" font-size="9" fill="var(--muted)">${activeMonths[i]}</text>
-    <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="var(--accent)" stroke="var(--bg1)" stroke-width="2"/>
-    ${p.h > 0 ? `<text x="${p.x.toFixed(1)}" y="${(p.y-9).toFixed(1)}" text-anchor="middle" font-size="9" fill="var(--accent-light)" font-family="'JetBrains Mono',monospace">${Math.round(p.h)}г</text>` : ''}
-  `).join('');
-
-  const totalH = Math.round(activeHours.reduce((a,b)=>a+b,0));
-
-  return `<div class="an-card span2" style="overflow:hidden">
-    <div class="an-ttl" style="display:flex;align-items:center;justify-content:space-between">
-      <span>📈 Години по місяцях ${curY}</span>
-      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent)">${totalH}г всього</span>
-    </div>
-    <svg width="100%" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="overflow:visible">
-      ${yLabels}
-      <defs>
-        <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.3"/>
-          <stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"/>
-        </linearGradient>
-      </defs>
-      <path d="${areaPath}" fill="url(#lineGrad)"/>
-      <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>
-      ${xElements}
-    </svg>
-  </div>`;
-}
 
 // ===== MONTHLY BY TYPE (full width, fixed) =====
 
-
-// ===== STATS BY RELEASE YEAR =====
+// ===== BY RELEASE YEAR =====
 function cardByReleaseYear(entries) {
   const done = entries.filter(e => e.status === 'done' && e.year);
-  
-  // Extract start year from year field (handles "2020-2024" format)
-  const getYear = e => {
-    const y = String(e.year).match(/\d{4}/);
-    return y ? parseInt(y[0]) : null;
-  };
-  
+  const getYear = e => { const y = String(e.year).match(/\d{4}/); return y ? parseInt(y[0]) : null; };
   const yearCounts = {};
   done.forEach(e => {
     const y = getYear(e);
@@ -543,14 +514,11 @@ function cardByReleaseYear(entries) {
     else if (e.type === 'anime-serial' || e.type === 'anime-film') yearCounts[y].anime++;
     else if (e.type === 'mult' || e.type === 'mult-serial') yearCounts[y].mult++;
   });
-  
   const years = Object.keys(yearCounts).map(Number).sort((a,b) => b-a);
   if (!years.length) return '';
-  
   const oldest = years[years.length-1];
   const newest = years[0];
   const maxCount = Math.max(...years.map(y => yearCounts[y].total));
-  
   const rows = years.map(y => {
     const c = yearCounts[y];
     const barW = Math.round(c.total / maxCount * 100);
@@ -568,26 +536,23 @@ function cardByReleaseYear(entries) {
       <div style="font-size:11px;color:var(--muted2);min-width:80px">${parts.join(' ')}</div>
     </div>`;
   }).join('');
-
-  const funFacts = `
-    <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
-      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px">
-        <div style="color:var(--muted);font-size:10px;margin-bottom:2px">Найстаріший</div>
-        <div style="color:var(--accent);font-weight:600">${oldest} р.</div>
-        <div style="color:var(--muted2);font-size:11px">${done.filter(e=>getYear(e)===oldest).map(e=>e.name).join(', ').slice(0,40)}</div>
-      </div>
-      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px">
-        <div style="color:var(--muted);font-size:10px;margin-bottom:2px">Найновіший</div>
-        <div style="color:var(--accent);font-weight:600">${newest} р.</div>
-        <div style="color:var(--muted2);font-size:11px">${done.filter(e=>getYear(e)===newest).map(e=>e.name).join(', ').slice(0,40)}</div>
-      </div>
-      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px">
-        <div style="color:var(--muted);font-size:10px;margin-bottom:2px">Найпродуктивніший рік</div>
-        <div style="color:var(--accent);font-weight:600">${years.reduce((a,b) => yearCounts[a].total >= yearCounts[b].total ? a : b)} р.</div>
-        <div style="color:var(--muted2);font-size:11px">${maxCount} переглядів</div>
-      </div>
-    </div>`;
-
+  const funFacts = `<div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px">
+      <div style="color:var(--muted);font-size:10px;margin-bottom:2px">Найстаріший</div>
+      <div style="color:var(--accent);font-weight:600">${oldest} р.</div>
+      <div style="color:var(--muted2);font-size:11px">${done.filter(e=>getYear(e)===oldest).map(e=>e.name).join(', ').slice(0,40)}</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px">
+      <div style="color:var(--muted);font-size:10px;margin-bottom:2px">Найновіший</div>
+      <div style="color:var(--accent);font-weight:600">${newest} р.</div>
+      <div style="color:var(--muted2);font-size:11px">${done.filter(e=>getYear(e)===newest).map(e=>e.name).join(', ').slice(0,40)}</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px">
+      <div style="color:var(--muted);font-size:10px;margin-bottom:2px">Найпродуктивніший</div>
+      <div style="color:var(--accent);font-weight:600">${years.reduce((a,b)=>yearCounts[a].total>=yearCounts[b].total?a:b)} р.</div>
+      <div style="color:var(--muted2);font-size:11px">${maxCount} переглядів</div>
+    </div>
+  </div>`;
   return `<div class="an-card" style="margin-top:16px">
     <div class="an-ttl"><span>📅</span> По роках випуску</div>
     ${funFacts}
