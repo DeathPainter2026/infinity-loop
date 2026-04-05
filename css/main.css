@@ -191,7 +191,7 @@ body { isolation: isolate; font-family: 'Raleway', sans-serif; font-size: 15px; 
 .sp-plan { background: rgba(var(--c-plan-rgb),0.1); color: var(--c-plan); }
 .sp-drop { background: rgba(var(--c-drop-rgb),0.1); color: var(--c-drop); }
 
-.genre-tags { display: flex; gap: 3px; flex-wrap: wrap; overflow: hidden; max-height: 44px; }
+.genre-tags { display: flex; gap: 3px; flex-wrap: wrap; }
 .g-tag { font-size: 11px; padding: 2px 7px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 4px; color: var(--muted2); white-space: nowrap; }
 
 /* ===== CARDS ===== */
