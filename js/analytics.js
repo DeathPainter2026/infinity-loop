@@ -1,3 +1,4 @@
+// analytics.js v202604060458
 // ===== CROSS-MONTH SERIAL SPLIT =====
 // For serials that span multiple months, distribute hours proportionally by days
 function getMonthlyHours(entries) {
@@ -114,7 +115,7 @@ function renderAnalytics() {
   const entries = getEntries();
   const done = entries.filter(e=>e.status==='done');
   document.getElementById('anContent').innerHTML = `
-    ${cardFunFacts(entries)}
+    ${cardQuickFacts(entries)}
     <div class="an-grid" style="margin-top:16px">
       ${cardDonutCount(entries)}
       ${cardDonutHours(entries)}
@@ -122,7 +123,9 @@ function renderAnalytics() {
       ${cardComparison(done)}
     </div>
     <div style="margin-top:16px">${cardHoursLineChart(entries)}</div>
-    <div style="margin-top:16px">${cardMonthlyByType(entries)}</div>`;
+    <div style="margin-top:16px">${cardTypesSummary(entries)}</div>
+    <div style="margin-top:16px">${cardMonthlyByType(entries)}</div>
+    ${cardByReleaseYear(entries)}`;
 }
 
 function anCard(cls,icon,title,content) {
