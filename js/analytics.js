@@ -65,6 +65,7 @@ function cardQuickFacts(entries) {
   const diffs=done.filter(e=>e.rating&&e.imdb).map(e=>e.rating-e.imdb);
   const avgDiff=diffs.length?(+(diffs.reduce((a,b)=>a+b,0)/diffs.length).toFixed(1)):'—';
   const avgDiffStr=avgDiff!=='—'?(avgDiff>=0?`+${avgDiff}`:String(avgDiff)):'—';
+  const animeCount = entries.filter(e=>e.type.includes('anime')).length;
   const cards=[
     {icon:'✅',val:done.length,lbl:'переглянуто',color:'var(--c-done)'},
     {icon:'🔥',val:fire,lbl:'шедеврів 10🔥',color:'#ff6b35'},
@@ -73,10 +74,12 @@ function cardQuickFacts(entries) {
     {icon:'🏆',val:marathon,lbl:'рекордний марафон',color:'var(--c-plan)'},
     {icon:'📊',val:avgDiffStr,lbl:'моя оцінка vs IMDb',color:'var(--c-done)'},
     {icon:'🎬',val:entries.filter(e=>e.type==='film').length,lbl:'фільмів',color:'#00bcd4'},
-    {icon:'⛩️',val:entries.filter(e=>e.type.includes('anime')).length,lbl:'аніме',color:'#f06292'},
+    {icon:'📺',val:entries.filter(e=>e.type==='serial').length,lbl:'серіалів',color:'#66bb6a'},
+    {icon:'⛩️',val:animeCount,lbl:'аніме',color:'#f06292'},
+    {icon:'🎨',val:entries.filter(e=>e.type==='mult'||e.type==='mult-serial').length,lbl:'мультфільмів',color:'#ffb74d'},
   ];
   return `<div class="an-card">
-    <div class="fun-grid" style="grid-template-columns:repeat(4,1fr);gap:8px">
+    <div class="fun-grid" style="grid-template-columns:repeat(5,1fr);gap:8px">
       ${cards.map(c=>`<div class="fun-item">
         <div class="fun-icon">${c.icon}</div>
         <div class="fun-val" style="color:${c.color}">${c.val}</div>
