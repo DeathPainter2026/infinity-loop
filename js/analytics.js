@@ -93,7 +93,7 @@ function cardQuickFacts(entries) {
 // ===== TYPES SUMMARY (before monthly) =====
 function cardTypesSummary(entries) {
   const tc=typeConfig();
-  const rows=tc.map(t=>{
+  const tableRows=tc.map(t=>{
     const items=entries.filter(e=>e.type===t.key);
     if(!items.length) return null;
     let mins=0; items.forEach(e=>{mins+=parseDurationMinutes(e.dur||'');});
@@ -103,16 +103,32 @@ function cardTypesSummary(entries) {
     if(t.serial){
       const seas=items.reduce((s,e)=>s+(e.seasons||0),0);
       const eps=items.reduce((s,e)=>s+(e.episodes||0),0);
-      if(seas||eps) extra=` · ${seas?seas+'сез. ':''}${eps?eps+'ep':''}`;
+      if(seas||eps) extra=`${seas?'<br><span style="font-size:10px;color:var(--muted2)">'+seas+'сез. '+(eps?eps+'еп':'')+'</span>':''}`;
     }
-    return `<div style="display:grid;grid-template-columns:12px 1fr 40px 90px;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
-      <div style="width:8px;height:8px;border-radius:50%;background:${t.color};box-shadow:0 0 4px ${t.color}"></div>
-      <span style="font-size:12px;color:var(--text)">${t.label}</span>
-      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${t.color};font-weight:600;text-align:right">${items.length}</span>
-      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);text-align:right">${durStr}${extra}</span>
-    </div>`;
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:8px 10px;white-space:nowrap">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:8px;height:8px;border-radius:50%;background:${t.color};flex-shrink:0;box-shadow:0 0 4px ${t.color}"></div>
+          <span style="font-size:12px">${t.label}</span>
+        </div>
+      </td>
+      <td style="padding:8px 16px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${t.color}">${items.length}</td>
+      <td style="padding:8px 10px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted2);white-space:nowrap">${durStr}${extra}</td>
+    </tr>`;
   }).filter(Boolean).join('');
-  return `<div class="an-card"><div class="an-ttl"><span>📊</span> Загальна статистика</div>${rows}</div>`;
+  return `<div class="an-card">
+    <div class="an-ttl"><span>📊</span> Загальна статистика</div>
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border2)">
+          <th style="padding:5px 10px;text-align:left;font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Тип</th>
+          <th style="padding:5px 16px;text-align:center;font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">К-сть</th>
+          <th style="padding:5px 10px;text-align:right;font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Час</th>
+        </tr>
+      </thead>
+      <tbody>${tableRows}</tbody>
+    </table>
+  </div>`;
 }
 
 function renderAnalytics() {
