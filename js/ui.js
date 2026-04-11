@@ -170,11 +170,15 @@ function render() {
 // ===== VIEW =====
 function setView(v) {
   _view = v;
-  document.getElementById('tableWrap').style.display = v==='table'?'':'none';
-  document.getElementById('cardsGrid').style.display = v==='cards'?'grid':'none';
+  document.getElementById('tableWrap').style.display    = v==='table'    ? '' : 'none';
+  document.getElementById('cardsGrid').style.display    = v==='cards'    ? 'grid' : 'none';
+  document.getElementById('calendarView').style.display = v==='calendar' ? '' : 'none';
   document.getElementById('vbTable').classList.toggle('active', v==='table');
   document.getElementById('vbCards').classList.toggle('active', v==='cards');
-  render();
+  const vbCal = document.getElementById('vbCal');
+  if (vbCal) vbCal.classList.toggle('active', v==='calendar');
+  if (v==='calendar') renderCalendar();
+  else render();
 }
 
 // ===== NAVIGATION =====
@@ -679,4 +683,81 @@ function exportJSON() {
   a.click();
   URL.revokeObjectURL(url);
   closeModal('exportModal');
+}
+
+// ===== CALENDAR VIEW =====
+let _calYear = new Date().getFullYear();
+let _calMonth = new Date().getMonth();
+
+function renderCalendar() {
+  const container = document.getElementById('calendarView');
+  if (!container) return;
+  const entries = getEntries();
+  const y = _calYear, m = _calMonth;
+  const monthNames = ['Січень','Лютий','Березень','Квітень','Травень','Червень',
+                      'Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+  const dayNames = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
+
+  // Group entries by date
+  const byDate = {};
+  entries.forEach(e => {
+    // Show on end date, or start date if no end
+    const dateStr = e.dateEnd || e.dateStart;
+    if (!dateStr) return;
+    const d = new Date(dateStr);
+    if (d.getFullYear() !== y || d.getMonth() !== m) return;
+    const key = d.getDate();
+    if (!byDate[key]) byDate[key] = [];
+    byDate[key].push(e);
+  });
+
+  // Build calendar grid
+  const firstDay = new Date(y, m, 1);
+  const lastDay = new Date(y, m+1, 0);
+  const startDow = (firstDay.getDay() + 6) % 7; // Mon=0
+  const totalDays = lastDay.getDate();
+
+  const typeEmoji = {
+    'film':'🎬','serial':'📺','anime-serial':'⛩️',
+    'anime-film':'🎌','mult':'🎨','mult-serial':'🎪'
+  };
+  const typeColor = {
+    'film':'#00bcd4','serial':'#66bb6a','anime-serial':'#f06292',
+    'anime-film':'#ce93d8','mult':'#ffb74d','mult-serial':'#ffd54f'
+  };
+
+  let cells = '';
+  // Empty cells before first day
+  for (let i = 0; i < startDow; i++) {
+    cells += `<div class="cal-cell cal-empty"></div>`;
+  }
+  // Day cells
+  for (let d = 1; d <= totalDays; d++) {
+    const today = new Date();
+    const isToday = d === today.getDate() && m === today.getMonth() && y === today.getFullYear();
+    const dayEntries = byDate[d] || [];
+    const dots = dayEntries.slice(0,4).map(e =>
+      `<div class="cal-dot" style="background:${typeColor[e.type]||'var(--accent)'}" 
+        onclick="event.stopPropagation();openEditModal(${e.id})" 
+        title="${e.name}">${typeEmoji[e.type]||'🎬'}</div>`
+    ).join('');
+    const more = dayEntries.length > 4 ? `<div class="cal-more">+${dayEntries.length-4}</div>` : '';
+    cells += `<div class="cal-cell${isToday?' cal-today':''}${dayEntries.length?' cal-has-entries':''}">
+      <div class="cal-day-num">${d}</div>
+      <div class="cal-dots">${dots}${more}</div>
+    </div>`;
+  }
+
+  container.innerHTML = `
+    <div class="cal-wrap">
+      <div class="cal-header">
+        <button class="cal-nav" onclick="_calMonth--;if(_calMonth<0){_calMonth=11;_calYear--;}renderCalendar()">‹</button>
+        <div class="cal-title">${monthNames[m]} ${y}</div>
+        <button class="cal-nav" onclick="_calMonth++;if(_calMonth>11){_calMonth=0;_calYear++;}renderCalendar()">›</button>
+      </div>
+      <div class="cal-grid">
+        ${dayNames.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+        ${cells}
+      </div>
+    </div>`;
 }
