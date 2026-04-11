@@ -698,66 +698,92 @@ function renderCalendar() {
                       'Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
   const dayNames = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
 
-  // Group entries by date
-  const byDate = {};
-  entries.forEach(e => {
-    // Show on end date, or start date if no end
-    const dateStr = e.dateEnd || e.dateStart;
-    if (!dateStr) return;
-    const d = new Date(dateStr);
-    if (d.getFullYear() !== y || d.getMonth() !== m) return;
-    const key = d.getDate();
-    if (!byDate[key]) byDate[key] = [];
-    byDate[key].push(e);
-  });
+  const typeEmoji = {'film':'🎬','serial':'📺','anime-serial':'⛩️','anime-film':'🎌','mult':'🎨','mult-serial':'🎪'};
+  const typeColor = {'film':'#00bcd4','serial':'#66bb6a','anime-serial':'#f06292','anime-film':'#ce93d8','mult':'#ffb74d','mult-serial':'#ffd54f'};
 
-  // Build calendar grid
   const firstDay = new Date(y, m, 1);
-  const lastDay = new Date(y, m+1, 0);
-  const startDow = (firstDay.getDay() + 6) % 7; // Mon=0
+  const lastDay  = new Date(y, m+1, 0);
   const totalDays = lastDay.getDate();
 
-  const typeEmoji = {
-    'film':'🎬','serial':'📺','anime-serial':'⛩️',
-    'anime-film':'🎌','mult':'🎨','mult-serial':'🎪'
-  };
-  const typeColor = {
-    'film':'#00bcd4','serial':'#66bb6a','anime-serial':'#f06292',
-    'anime-film':'#ce93d8','mult':'#ffb74d','mult-serial':'#ffd54f'
+  // Build day map
+  const dayMap = {};
+  const addDay = (d, entry, role) => {
+    if (d < 1 || d > totalDays) return;
+    if (!dayMap[d]) dayMap[d] = [];
+    dayMap[d].push({entry, role});
   };
 
+  entries.forEach(e => {
+    if (!e.dateEnd && !e.dateStart) return;
+    const dEnd   = e.dateEnd   ? new Date(e.dateEnd)   : null;
+    const dStart = e.dateStart ? new Date(e.dateStart) : null;
+    const isRange = ['serial','anime-serial','mult-serial'].includes(e.type);
+
+    if (isRange && dStart && dEnd && dStart.getTime() !== dEnd.getTime()) {
+      const rStart = new Date(Math.max(dStart.getTime(), new Date(y,m,1).getTime()));
+      const rEnd   = new Date(Math.min(dEnd.getTime(),   new Date(y,m,totalDays).getTime()));
+      if (rStart > new Date(y,m,totalDays) || rEnd < new Date(y,m,1)) return;
+      const sd = rStart.getDate(), ed = rEnd.getDate();
+      const isActStart = dStart >= new Date(y,m,1);
+      const isActEnd   = dEnd   <= new Date(y,m,totalDays);
+      for (let d = sd; d <= ed; d++) {
+        let role = d===sd ? (isActStart ? (d===ed?'single':'start') : 'cont-start')
+                          : d===ed ? (isActEnd ? 'end' : 'cont-end') : 'mid';
+        addDay(d, e, role);
+      }
+    } else {
+      const ds = e.dateEnd || e.dateStart;
+      const d = new Date(ds);
+      if (d.getFullYear()!==y || d.getMonth()!==m) return;
+      addDay(d.getDate(), e, 'single');
+    }
+  });
+
+  const startDow = (firstDay.getDay() + 6) % 7;
+  const today = new Date();
   let cells = '';
-  // Empty cells before first day
-  for (let i = 0; i < startDow; i++) {
-    cells += `<div class="cal-cell cal-empty"></div>`;
-  }
-  // Day cells
+
+  for (let i = 0; i < startDow; i++) cells += `<div class="cal-cell cal-empty"></div>`;
+
   for (let d = 1; d <= totalDays; d++) {
-    const today = new Date();
-    const isToday = d === today.getDate() && m === today.getMonth() && y === today.getFullYear();
-    const dayEntries = byDate[d] || [];
-    const dots = dayEntries.slice(0,4).map(e =>
-      `<div class="cal-dot" style="background:${typeColor[e.type]||'var(--accent)'}" 
-        onclick="event.stopPropagation();openEditModal(${e.id})" 
-        title="${e.name}">${typeEmoji[e.type]||'🎬'}</div>`
+    const isToday = d===today.getDate() && m===today.getMonth() && y===today.getFullYear();
+    const items = dayMap[d] || [];
+    const bars  = items.filter(x => x.role !== 'single');
+    const dots  = items.filter(x => x.role === 'single');
+
+    const barHtml = bars.map(x => {
+      const e = x.entry;
+      const color = typeColor[e.type]||'var(--accent)';
+      const isStart = x.role==='start';
+      const isEnd   = x.role==='end';
+      const rL = (isStart||x.role==='single') ? '3px' : '0';
+      const rR = (isEnd  ||x.role==='single') ? '3px' : '0';
+      const borderL = (!isStart && x.role!=='cont-start') ? 'border-left:none;' : '';
+      const label = isStart ? `<span class="cal-bar-label">${typeEmoji[e.type]} ${e.name.slice(0,16)}${e.name.length>16?'…':''}</span>` : '';
+      return `<div class="cal-bar" style="background:${color}33;border:1px solid ${color}88;border-radius:${rL} ${rR} ${rR} ${rL};${borderL}" onclick="event.stopPropagation();openEditModal(${e.id})" title="${e.name}">${label}</div>`;
+    }).join('');
+
+    const dotHtml = dots.slice(0,4).map(x =>
+      `<span class="cal-dot" onclick="event.stopPropagation();openEditModal(${x.entry.id})" title="${x.entry.name}">${typeEmoji[x.entry.type]||'🎬'}</span>`
     ).join('');
-    const more = dayEntries.length > 4 ? `<div class="cal-more">+${dayEntries.length-4}</div>` : '';
-    cells += `<div class="cal-cell${isToday?' cal-today':''}${dayEntries.length?' cal-has-entries':''}">
+    const more = items.length > 7 ? `<span class="cal-more">+${items.length-7}</span>` : '';
+
+    cells += `<div class="cal-cell${isToday?' cal-today':''}${items.length?' cal-has-entries':''}">
       <div class="cal-day-num">${d}</div>
-      <div class="cal-dots">${dots}${more}</div>
+      ${barHtml}
+      <div class="cal-dots">${dotHtml}${more}</div>
     </div>`;
   }
 
-  container.innerHTML = `
-    <div class="cal-wrap">
-      <div class="cal-header">
-        <button class="cal-nav" onclick="_calMonth--;if(_calMonth<0){_calMonth=11;_calYear--;}renderCalendar()">‹</button>
-        <div class="cal-title">${monthNames[m]} ${y}</div>
-        <button class="cal-nav" onclick="_calMonth++;if(_calMonth>11){_calMonth=0;_calYear++;}renderCalendar()">›</button>
-      </div>
-      <div class="cal-grid">
-        ${dayNames.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
-        ${cells}
-      </div>
-    </div>`;
+  container.innerHTML = `<div class="cal-wrap">
+    <div class="cal-header">
+      <button class="cal-nav" onclick="_calMonth--;if(_calMonth<0){_calMonth=11;_calYear--;}renderCalendar()">‹</button>
+      <div class="cal-title">${monthNames[m]} ${y}</div>
+      <button class="cal-nav" onclick="_calMonth++;if(_calMonth>11){_calMonth=0;_calYear++;}renderCalendar()">›</button>
+    </div>
+    <div class="cal-grid">
+      ${dayNames.map(dn=>`<div class="cal-dow">${dn}</div>`).join('')}
+      ${cells}
+    </div>
+  </div>`;
 }
