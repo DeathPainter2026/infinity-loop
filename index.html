@@ -185,6 +185,7 @@
         <div class="view-btns">
           <button class="vb active" id="vbTable" onclick="setView('table')">≡</button>
           <button class="vb" id="vbCards" onclick="setView('cards')">⊞</button>
+          <button class="vb" id="vbCal" onclick="setView('calendar')">📅</button>
         </div>
         <button class="light-toggle-btn topbar-light-btn" onclick="toggleLightMode()" id="lightToggleBtn" title="Світла / темна">☀️</button>
         <button class="light-toggle-btn topbar-light-btn mobile-only" onclick="mobileNavTheme()" title="Тема">🎨</button>
@@ -264,6 +265,7 @@
           <div id="tableBody"></div>
         </div>
         <div class="cards-grid" id="cardsGrid" style="display:none"></div>
+        <div id="calendarView" style="display:none"></div>
       </div>
 
       <div id="analyticsPage" style="display:none">
