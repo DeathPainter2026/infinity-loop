@@ -469,6 +469,32 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
 </script>
+<script>
+// Patch startApp to always update vibe banner after data loads
+const _origStartApp = typeof startApp !== 'undefined' ? startApp : null;
+document.addEventListener('DOMContentLoaded', () => {
+  // Override startApp to inject vibe year setup
+  const _waitForStartApp = setInterval(() => {
+    if (typeof startApp !== 'undefined' && typeof loadAll !== 'undefined') {
+      clearInterval(_waitForStartApp);
+      const _origStart = startApp;
+      window.startApp = async function(user) {
+        _origStart(user);
+        // After render, force vibe banner update
+        setTimeout(async () => {
+          try {
+            const vibes = await dbGetVibes();
+            window._cache.vibes = vibes;
+            const curY = new Date().getFullYear();
+            window._currentVibeYear = vibes.some(v=>v.year===curY) ? curY : (vibes[0]?.year || curY);
+            updateYearBanner();
+          } catch(e) {}
+        }, 500);
+      };
+    }
+  }, 50);
+});
+</script>
 
 <script>
 function showExportMenu() {
