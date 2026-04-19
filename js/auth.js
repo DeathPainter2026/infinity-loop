@@ -88,9 +88,10 @@ function toggleLightMode() {
 function openSettings() {
   if (!isAdmin()) return;
   const s = getSettings();
-  document.getElementById('stVibeYear').value  = s.vibeYear  || '';
-  document.getElementById('stVibeTitle').value = s.vibeTitle || '';
-  document.getElementById('stVibeTags').value  = s.vibeTags  || '';
+  document.getElementById('stVibeYear').value  = new Date().getFullYear();
+  document.getElementById('stVibeTitle').value = '';
+  document.getElementById('stVibeTags').value  = '';
+  renderVibeList();
   document.getElementById('stOmdbKey').value   = s.omdbKey   || '';
   renderGuestList();
   renderGenreList();
@@ -115,14 +116,48 @@ async function saveAdminPass() {
   alert('Пароль змінено!');
 }
 
+// ─── VIBES (multi-year) ───
+function getVibes() {
+  return window._cache?.vibes || [];
+}
+
+function renderVibeList() {
+  const list = document.getElementById('vibeList');
+  if (!list) return;
+  const vibes = getVibes().sort((a,b) => b.year - a.year);
+  if (!vibes.length) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0">Немає вайбів. Додай перший!</div>';
+    return;
+  }
+  list.innerHTML = vibes.map(v => `
+    <div class="manage-item" style="flex-direction:column;align-items:flex-start;gap:4px;padding:10px">
+      <div style="display:flex;width:100%;align-items:center;justify-content:space-between">
+        <span style="font-size:16px;font-weight:700;color:var(--accent)">${v.year}</span>
+        <button class="manage-del" onclick="deleteVibeUI(${v.year})">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--text)">${v.title||'—'}</div>
+      <div style="font-size:11px;color:var(--muted2)">${v.tags||'—'}</div>
+    </div>`).join('');
+}
+
 async function saveVibe() {
-  await saveSettings({
-    vibeYear:  document.getElementById('stVibeYear').value,
-    vibeTitle: document.getElementById('stVibeTitle').value,
-    vibeTags:  document.getElementById('stVibeTags').value,
-  });
+  const year  = parseInt(document.getElementById('stVibeYear').value);
+  const title = document.getElementById('stVibeTitle').value.trim();
+  const tags  = document.getElementById('stVibeTags').value.trim();
+  if (!year) { alert('Введи рік'); return; }
+  await syncSaveVibe(year, title, tags);
+  renderVibeList();
   updateYearBanner();
-  closeModal('settingsModal');
+  // Clear form
+  document.getElementById('stVibeYear').value  = new Date().getFullYear();
+  document.getElementById('stVibeTitle').value = '';
+  document.getElementById('stVibeTags').value  = '';
+}
+
+async function deleteVibeUI(year) {
+  await syncDeleteVibe(year);
+  renderVibeList();
+  updateYearBanner();
 }
 
 async function saveOmdbKey() {

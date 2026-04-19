@@ -259,18 +259,55 @@ function updateKPI() {
 
 // ===== YEAR BANNER =====
 function updateYearBanner() {
-  const s = getSettings();
-  const e = getEntries();
-  document.getElementById('ybYear').textContent  = s.vibeYear||'2026';
-  document.getElementById('ybTitle').textContent = s.vibeTitle||'Infinity Loop';
-  document.getElementById('ybTags').textContent  = s.vibeTags||'';
-  const st = calcStats(e);
-  document.getElementById('ybCount').textContent = e.filter(x=>x.status==='done').length;
-  document.getElementById('ybHours').textContent = st.hoursStr;
-  document.getElementById('ybFire').textContent  = st.fire+'🔥';
+  const vibes = window._cache?.vibes || [];
+  const curYear = window._currentVibeYear || new Date().getFullYear();
+  const vibe = vibes.find(v => v.year === curYear);
+
+  const ybYear = document.getElementById('ybYear');
+  const ybTitle = document.getElementById('ybTitle');
+  const ybTags  = document.getElementById('ybTags');
+  if (ybYear)  ybYear.textContent  = curYear;
+  if (ybTitle) ybTitle.textContent = vibe?.title || 'Infinity Loop';
+  if (ybTags)  ybTags.textContent  = vibe?.tags  || '';
+
+  // Show/hide nav arrows
+  const years = vibes.map(v=>v.year).sort((a,b)=>a-b);
+  const hasPrev = years.some(y => y < curYear);
+  const hasNext = years.some(y => y > curYear);
+  const prev = document.getElementById('ybPrev');
+  const next = document.getElementById('ybNext');
+  if (prev) prev.style.opacity = hasPrev ? '1' : '0.2';
+  if (next) next.style.opacity = hasNext ? '1' : '0.2';
+
+  // Update stats for selected year
+  const entries = getEntries();
+  const yearEntries = entries.filter(e => {
+    const d = new Date(e.dateEnd || e.dateStart);
+    return d.getFullYear() === curYear && e.status === 'done';
+  });
+  const fire = yearEntries.filter(e=>e.fire).length;
+  let totalMin = 0;
+  yearEntries.forEach(e => { totalMin += parseDurationMinutes(e.dur||''); });
+  const h = Math.floor(totalMin/60), m2 = totalMin%60;
+  const hoursStr = totalMin ? `${h}:${String(m2).padStart(2,'0')}г` : '0г';
+  document.getElementById('ybCount').textContent = yearEntries.length;
+  document.getElementById('ybHours').textContent = hoursStr;
+  document.getElementById('ybFire').textContent  = `${fire}🔥`;
 }
 
-// ===== MODAL =====
+function switchVibeYear(dir) {
+  const vibes = window._cache?.vibes || [];
+  if (!vibes.length) return;
+  const years = vibes.map(v=>v.year).sort((a,b)=>a-b);
+  const curYear = window._currentVibeYear || new Date().getFullYear();
+  const curIdx = years.indexOf(curYear);
+  const newIdx = curIdx + dir;
+  if (newIdx < 0 || newIdx >= years.length) return;
+  window._currentVibeYear = years[newIdx];
+  updateYearBanner();
+}
+
+
 function overlayClick(e,id) { if(e.target.id===id) closeModal(id); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 

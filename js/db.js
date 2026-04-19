@@ -89,8 +89,9 @@ function entryToDb(e) {
     fire:   e.fire   || false,
     imdb:   e.imdb   || null,
     genres: e.genres || [],
-    notes:  e.notes  || null,
-    emoji:  e.emoji  || '🎬',
+    notes:   e.notes   || null,
+    emoji:   e.emoji   || '🎬',
+    private: e.private || false,
   };
 }
 function dbToEntry(r) {
@@ -112,6 +113,7 @@ function dbToEntry(r) {
     genres:    r.genres     || [],
     notes:     r.notes      || '',
     emoji:     r.emoji      || '🎬',
+    private:   r.private    || false,
   };
 }
 
@@ -245,16 +247,18 @@ async function dbUpdateAdminPass(newPass) {
 window._cache = { entries: [], genres: [], settings: {}, users: [] };
 
 async function loadAll() {
-  const [entries, genres, settings, users] = await Promise.all([
+  const [entries, genres, settings, users, vibes] = await Promise.all([
     dbGetEntries(),
     dbGetGenres(),
     dbGetSettings(),
     dbGetUsers(),
+    dbGetVibes(),
   ]);
   window._cache.entries  = entries;
   window._cache.genres   = genres;
   window._cache.settings = settings;
   window._cache.users    = users;
+  window._cache.vibes    = vibes;
 }
 
 // Sync helpers that update cache + DB
@@ -283,4 +287,63 @@ async function syncRemoveGenre(name) {
 async function syncSaveSettings(patch) {
   await dbSaveSettings(patch);
   window._cache.settings = { ...window._cache.settings, ...patch };
+}
+
+// =============================================
+// VIBES (per-year banners)
+// =============================================
+async function dbGetVibes() {
+  if (!USE_SUPABASE || !SB) {
+    return JSON.parse(localStorage.getItem('il_vibes') || '[]');
+  }
+  const { data, error } = await SB.from('vibes')
+    .select('*')
+    .eq('user_id', currentUser())
+    .order('year', { ascending: false });
+  if (error) { console.error(error); return []; }
+  return data.map(r => ({ id: r.id, year: r.year, title: r.title, tags: r.tags }));
+}
+
+async function dbSaveVibe(year, title, tags) {
+  if (!USE_SUPABASE || !SB) {
+    const vibes = JSON.parse(localStorage.getItem('il_vibes') || '[]');
+    const idx = vibes.findIndex(v => v.year === year);
+    if (idx >= 0) vibes[idx] = { year, title, tags };
+    else vibes.push({ year, title, tags });
+    localStorage.setItem('il_vibes', JSON.stringify(vibes));
+    return;
+  }
+  const { error } = await SB.from('vibes').upsert(
+    { user_id: currentUser(), year, title, tags },
+    { onConflict: 'user_id,year' }
+  );
+  if (error) console.error('Vibe save error:', error);
+}
+
+async function dbDeleteVibe(year) {
+  if (!USE_SUPABASE || !SB) {
+    const vibes = JSON.parse(localStorage.getItem('il_vibes') || '[]');
+    localStorage.setItem('il_vibes', JSON.stringify(vibes.filter(v => v.year !== year)));
+    return;
+  }
+  await SB.from('vibes').delete().eq('user_id', currentUser()).eq('year', year);
+}
+
+// Cache helpers
+async function syncGetVibes() {
+  const vibes = await dbGetVibes();
+  window._cache.vibes = vibes;
+  return vibes;
+}
+async function syncSaveVibe(year, title, tags) {
+  await dbSaveVibe(year, title, tags);
+  if (!window._cache.vibes) window._cache.vibes = [];
+  const idx = window._cache.vibes.findIndex(v => v.year === year);
+  if (idx >= 0) window._cache.vibes[idx] = { year, title, tags };
+  else window._cache.vibes.push({ year, title, tags });
+  window._cache.vibes.sort((a,b) => b.year - a.year);
+}
+async function syncDeleteVibe(year) {
+  await dbDeleteVibe(year);
+  window._cache.vibes = (window._cache.vibes||[]).filter(v => v.year !== year);
 }
