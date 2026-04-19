@@ -75,6 +75,8 @@ function initResizable() {
 // ===== FILTERING =====
 function getFiltered() {
   let data = getEntries();
+  // Hide private entries from guests
+  if (!isAdmin()) data = data.filter(e => !e.private);
   if (_sidebarFilter) {
     if (_sidebarFilter.key==='status') data = data.filter(e=>e.status===_sidebarFilter.val);
     else if (_sidebarFilter.key==='type') data = data.filter(e=>e.type===_sidebarFilter.val);
@@ -116,7 +118,7 @@ function renderTable() {
 
     return `<div class="t-row" onclick="${admin?`openEditModal(${e.id})`:''}">
       <div class="td td-num" data-col="num" style="width:${_cols.num}px;min-width:${_cols.num}px;max-width:${_cols.num}px">${i+1}</div>
-      <div class="td" data-col="name" style="width:${_cols.name}px;min-width:${_cols.name}px;max-width:${_cols.name}px"><div class="td-name-cell"><div class="td-name-main">${e.name}</div></div></div>
+      <div class="td" data-col="name" style="width:${_cols.name}px;min-width:${_cols.name}px;max-width:${_cols.name}px"><div class="td-name-cell"><div class="td-name-main">${e.name}${e.private&&isAdmin()?' 🔒':''}</div></div></div>
       <div class="td" data-col="type" style="width:${_cols.type}px;min-width:${_cols.type}px;max-width:${_cols.type}px"><span class="type-pill ${tc}">${ti} ${tn}</span></div>
       <div class="td td-mono" data-col="year" style="width:${_cols.year}px;min-width:${_cols.year}px;max-width:${_cols.year}px">${e.year||'—'}</div>
       <div class="td td-mono" data-col="date" style="width:${_cols.date}px;min-width:${_cols.date}px;max-width:${_cols.date}px">${dateD}</div>
@@ -386,7 +388,7 @@ function renderGenreDropdown(filter='') {
     .sort((a,b)=>a.localeCompare(b,'uk'));
   panel.innerHTML = genres.map(g=>{
     const sel = _selectedGenres.includes(g);
-    return `<div class="gdp-item${sel?' selected':''}" onclick="toggleGenreItem('${g}')">
+    return `<div class="gdp-item${sel?' selected':''}" onclick="event.stopPropagation();toggleGenreItem('${g}')">
       <div class="gdp-chk">${sel?'✓':''}</div>${g}
     </div>`;
   }).join('') || '<div style="padding:10px 12px;color:var(--muted);font-size:12px">Не знайдено</div>';
@@ -407,7 +409,7 @@ function toggleGenreDropdown() {
     setTimeout(()=>document.getElementById('genreSearch').focus(), 50);
     // Close on outside click
     setTimeout(()=>{
-      document.addEventListener('click', closeGenreOnOutside, {once:true});
+      document.addEventListener('mousedown', closeGenreOnOutside, {once:true});
     }, 10);
   }
 }
@@ -420,7 +422,7 @@ function closeGenreOnOutside(e) {
     document.getElementById('genreArrow').textContent='▼';
   } else if (wrap && wrap.contains(e.target)) {
     // Re-attach listener
-    document.addEventListener('click', closeGenreOnOutside, {once:true});
+    document.addEventListener('mousedown', closeGenreOnOutside, {once:true});
   }
 }
 
@@ -429,6 +431,11 @@ function toggleGenreItem(g) {
   if (idx===-1) _selectedGenres.push(g);
   else _selectedGenres.splice(idx,1);
   renderGenreDropdown(document.getElementById('genreSearch')?.value||'');
+  // Re-register outside click listener so dropdown stays open
+  setTimeout(()=>{
+    document.removeEventListener('click', closeGenreOnOutside);
+    document.addEventListener('mousedown', closeGenreOnOutside, {once:true});
+  }, 10);
 }
 
 function removeGenreTag(g) {
