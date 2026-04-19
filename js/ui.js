@@ -269,7 +269,7 @@ function updateYearBanner() {
   const ybTags  = document.getElementById('ybTags');
   if (ybYear)  ybYear.textContent  = curYear;
   if (ybTitle) ybTitle.textContent = vibe?.title || 'Infinity Loop';
-  if (ybTags)  ybTags.textContent  = vibe?.tags  || '';
+  if (ybTags)  ybTags.textContent  = (vibe?.tags || '').replace(/\*/g, ' · ');
 
   // Show/hide nav arrows
   const years = vibes.map(v=>v.year).sort((a,b)=>a-b);
