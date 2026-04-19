@@ -22,4 +22,6 @@ function initApp() {
   window._currentVibeYear = hasCurrentYear ? curYear : (vibes[0]?.year || curYear);
 
   gotoPage('list', document.querySelector('.nav-item'));
+  // Force update banner after data is ready
+  setTimeout(() => updateYearBanner(), 100);
 }

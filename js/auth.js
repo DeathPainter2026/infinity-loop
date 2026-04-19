@@ -245,6 +245,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load all data (works for both localStorage and Supabase)
   try {
     await loadAll();
+    // Set vibe year immediately after data loads
+    const _curY = new Date().getFullYear();
+    const _vibes = window._cache?.vibes || [];
+    window._currentVibeYear = _vibes.some(v=>v.year===_curY) ? _curY : (_vibes[0]?.year || _curY);
   } catch(e) {
     console.error('Failed to load data:', e);
   }
