@@ -70,7 +70,7 @@ body.theme-cthulhu .year-banner::after {
 body.theme-classic {
   --bg:#06080f; --bg1:#080b16; --bg2:#0d1220; --bg3:#12192e; --bg4:#172138;
   --sidebar-bg:rgba(6,8,15,0.95); --topbar-bg:rgba(6,8,15,0.9);
-  --banner-bg:linear-gradient(135deg,rgba(79,70,229,0.14) 0%,rgba(139,92,246,0.09) 100%);
+  --banner-bg:linear-gradient(135deg,rgba(0,0,0,0.72) 0%,rgba(10,8,30,0.78) 100%);
   --banner-border:rgba(99,102,241,0.22);
   --border:#16203e; --border2:#1c2a50; --border-rgb:22,32,62;
   --text:#e8f0ff; --muted:#4a5898; --muted2:#8898e0;
@@ -108,7 +108,7 @@ body.theme-classic .year-banner::after {
 body.theme-cyberpunk {
   --bg:#03020a; --bg1:#05040e; --bg2:#080618; --bg3:#0b0820; --bg4:#100c28;
   --sidebar-bg:rgba(3,2,10,0.95); --topbar-bg:rgba(3,2,10,0.9);
-  --banner-bg:linear-gradient(135deg,rgba(224,64,251,0.12) 0%,rgba(0,229,255,0.08) 100%);
+  --banner-bg:linear-gradient(135deg,rgba(0,0,0,0.75) 0%,rgba(5,0,20,0.8) 100%);
   --banner-border:rgba(224,64,251,0.3);
   --border:#190730; --border2:#240c42; --border-rgb:25,7,48;
   --text:#faf0ff; --muted:#6828aa; --muted2:#c070f0;
@@ -156,7 +156,7 @@ body.theme-cyberpunk .year-banner::after {
 body.theme-horror {
   --bg:#050101; --bg1:#090202; --bg2:#0e0303; --bg3:#140404; --bg4:#1a0505;
   --sidebar-bg:rgba(5,1,1,0.95); --topbar-bg:rgba(5,1,1,0.9);
-  --banner-bg:linear-gradient(135deg,rgba(120,0,0,0.28) 0%,rgba(70,0,0,0.2) 100%);
+  --banner-bg:linear-gradient(135deg,rgba(0,0,0,0.75) 0%,rgba(30,0,0,0.8) 100%);
   --banner-border:rgba(180,0,0,0.22);
   --border:#270404; --border2:#360606; --border-rgb:39,4,4;
   --text:#ffe8e0; --muted:#803030; --muted2:#c06060;
@@ -196,7 +196,7 @@ body.theme-horror .sidebar::before {
 body.theme-anime {
   --bg:#070510; --bg1:#0c0818; --bg2:#110b22; --bg3:#150e2a; --bg4:#1a1235;
   --sidebar-bg:rgba(7,5,16,0.95); --topbar-bg:rgba(7,5,16,0.9);
-  --banner-bg:linear-gradient(135deg,rgba(233,30,99,0.12) 0%,rgba(156,39,176,0.09) 50%,rgba(255,152,0,0.06) 100%);
+  --banner-bg:linear-gradient(135deg,rgba(0,0,0,0.72) 0%,rgba(20,0,15,0.78) 100%);
   --banner-border:rgba(233,30,99,0.22);
   --border:#1e0c2e; --border2:#281240; --border-rgb:30,12,46;
   --text:#fff0fc; --muted:#782898; --muted2:#d090e0;
@@ -238,7 +238,7 @@ body.theme-anime .year-banner::after {
 body.theme-samurai {
   --bg:#0e0a06; --bg1:#140e08; --bg2:#1c1209; --bg3:#24180c; --bg4:#2e1f10;
   --sidebar-bg:rgba(14,10,6,0.96); --topbar-bg:rgba(14,10,6,0.9);
-  --banner-bg:linear-gradient(135deg,rgba(160,20,20,0.2) 0%,rgba(80,10,10,0.15) 100%);
+  --banner-bg:linear-gradient(135deg,rgba(0,0,0,0.75) 0%,rgba(20,0,0,0.8) 100%);
   --banner-border:rgba(180,40,40,0.25);
   --border:#2a1508; --border2:#3a1e0a; --border-rgb:42,21,8;
   --text:#fff5e8; --muted:#aa7038; --muted2:#d09858;
@@ -282,7 +282,7 @@ body.theme-samurai .topbar::before {
 body.theme-anime2 {
   --bg:#060408; --bg1:#0a060e; --bg2:#0f0916; --bg3:#150c1e; --bg4:#1c1028;
   --sidebar-bg:rgba(6,4,8,0.96); --topbar-bg:rgba(6,4,8,0.9);
-  --banner-bg:linear-gradient(135deg,rgba(255,140,0,0.12) 0%,rgba(30,100,200,0.1) 100%);
+  --banner-bg:linear-gradient(135deg,rgba(0,0,0,0.72) 0%,rgba(10,5,0,0.78) 100%);
   --banner-border:rgba(255,140,0,0.25);
   --border:#1e1030; --border2:#2a1840; --border-rgb:30,16,48;
   --text:#fff8d8; --muted:#684898; --muted2:#b898e8;
