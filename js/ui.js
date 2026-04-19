@@ -163,6 +163,7 @@ function render() {
   updateBadges();
   updateKPI();
   updateYearBanner();
+  renderNowWatching();
   document.getElementById('tbSub').textContent = getFiltered().length + ' позицій';
   refreshYearFilter();
   // Re-init resizable each render (handles re-created DOM)
@@ -829,5 +830,32 @@ function renderCalendar() {
       ${dayNames.map(dn=>`<div class="cal-dow">${dn}</div>`).join('')}
       ${cells}
     </div>
+  </div>`;
+}
+
+// ===== NOW WATCHING BANNER =====
+function renderNowWatching() {
+  const banner = document.getElementById('nowWatchingBanner');
+  if (!banner) return;
+  const nowItems = getEntries().filter(e => e.status === 'now');
+  if (!nowItems.length) { banner.style.display = 'none'; return; }
+
+  const typeEmoji = {'film':'🎬','serial':'📺','anime-serial':'⛩️','anime-film':'🎌','mult':'🎨','mult-serial':'🎪'};
+  
+  const items = nowItems.map(e => {
+    const emoji = typeEmoji[e.type] || '🎬';
+    const progress = e.episodes ? 
+      `<span style="font-size:11px;color:var(--muted2);margin-left:6px">серій: ${e.episodes}</span>` : '';
+    return `<div class="now-item" onclick="openEditModal(${e.id})">
+      <span class="now-emoji">${emoji}</span>
+      <span class="now-name">${e.name}</span>
+      ${progress}
+    </div>`;
+  }).join('');
+
+  banner.style.display = '';
+  banner.innerHTML = `<div class="now-banner">
+    <div class="now-label">👁️ Дивлюся зараз</div>
+    <div class="now-items">${items}</div>
   </div>`;
 }

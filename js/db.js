@@ -293,40 +293,44 @@ async function syncSaveSettings(patch) {
 // VIBES (per-year banners)
 // =============================================
 async function dbGetVibes() {
-  if (!USE_SUPABASE || !SB) {
-    return JSON.parse(localStorage.getItem('il_vibes') || '[]');
-  }
-  const { data, error } = await SB.from('vibes')
-    .select('*')
-    .eq('user_id', currentUser())
-    .order('year', { ascending: false });
-  if (error) { console.error(error); return []; }
-  return data.map(r => ({ id: r.id, year: r.year, title: r.title, tags: r.tags }));
+  const local = JSON.parse(localStorage.getItem('il_vibes') || '[]');
+  if (!USE_SUPABASE || !SB) return local;
+  try {
+    const { data, error } = await SB.from('vibes')
+      .select('*')
+      .eq('user_id', currentUser())
+      .order('year', { ascending: false });
+    if (error) { return local; } // Table might not exist yet
+    return data.map(r => ({ id: r.id, year: r.year, title: r.title, tags: r.tags }));
+  } catch(e) { return local; }
 }
 
 async function dbSaveVibe(year, title, tags) {
-  if (!USE_SUPABASE || !SB) {
-    const vibes = JSON.parse(localStorage.getItem('il_vibes') || '[]');
-    const idx = vibes.findIndex(v => v.year === year);
-    if (idx >= 0) vibes[idx] = { year, title, tags };
-    else vibes.push({ year, title, tags });
-    localStorage.setItem('il_vibes', JSON.stringify(vibes));
-    return;
-  }
-  const { error } = await SB.from('vibes').upsert(
-    { user_id: currentUser(), year, title, tags },
-    { onConflict: 'user_id,year' }
-  );
-  if (error) console.error('Vibe save error:', error);
+  // Always save to localStorage as backup
+  const vibes = JSON.parse(localStorage.getItem('il_vibes') || '[]');
+  const idx = vibes.findIndex(v => v.year === year);
+  if (idx >= 0) vibes[idx] = { year, title, tags };
+  else vibes.push({ year, title, tags });
+  localStorage.setItem('il_vibes', JSON.stringify(vibes));
+
+  if (!USE_SUPABASE || !SB) return;
+  try {
+    const { error } = await SB.from('vibes').upsert(
+      { user_id: currentUser(), year, title, tags },
+      { onConflict: 'user_id,year' }
+    );
+    if (error) console.error('Vibe save error:', error);
+  } catch(e) { console.warn('Vibes table not ready:', e.message); }
 }
 
 async function dbDeleteVibe(year) {
-  if (!USE_SUPABASE || !SB) {
-    const vibes = JSON.parse(localStorage.getItem('il_vibes') || '[]');
-    localStorage.setItem('il_vibes', JSON.stringify(vibes.filter(v => v.year !== year)));
-    return;
-  }
-  await SB.from('vibes').delete().eq('user_id', currentUser()).eq('year', year);
+  // Always update localStorage
+  const vibes = JSON.parse(localStorage.getItem('il_vibes') || '[]');
+  localStorage.setItem('il_vibes', JSON.stringify(vibes.filter(v => v.year !== year)));
+  if (!USE_SUPABASE || !SB) return;
+  try {
+    await SB.from('vibes').delete().eq('user_id', currentUser()).eq('year', year);
+  } catch(e) {}
 }
 
 // Cache helpers
