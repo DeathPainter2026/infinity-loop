@@ -75,6 +75,8 @@ function initResizable() {
 // ===== FILTERING =====
 function getFiltered() {
   let data = getEntries();
+  // Hide private entries from guests
+  if (!isAdmin()) data = data.filter(e => !e.private);
   if (_sidebarFilter) {
     if (_sidebarFilter.key==='status') data = data.filter(e=>e.status===_sidebarFilter.val);
     else if (_sidebarFilter.key==='type') data = data.filter(e=>e.type===_sidebarFilter.val);
@@ -105,7 +107,7 @@ function renderTable() {
     const [sc,si,sn] = getStatusInfo(e.status);
     const rc = getRatingClass(e.rating, e.fire);
     const rLabel = e.fire ? (e.rating?`${e.rating}🔥`:'🔥') : (e.rating||'—');
-    const genres = (e.genres||[]).map(g=>`<span class="g-tag">${g}</span>`).join('');
+    const genres = [...(e.genres||[])].sort((a,b)=>a.localeCompare(b,'uk')).map(g=>`<span class="g-tag">${g}</span>`).join('');
     const dateD = e.dateStart
       ? (e.dateEnd&&e.dateEnd!==e.dateStart ? `${formatDate(e.dateStart)}–${formatDate(e.dateEnd)}` : formatDate(e.dateStart))
       : '—';
@@ -116,7 +118,7 @@ function renderTable() {
 
     return `<div class="t-row" onclick="${admin?`openEditModal(${e.id})`:''}">
       <div class="td td-num" data-col="num" style="width:${_cols.num}px;min-width:${_cols.num}px;max-width:${_cols.num}px">${i+1}</div>
-      <div class="td" data-col="name" style="width:${_cols.name}px;min-width:${_cols.name}px;max-width:${_cols.name}px"><div class="td-name-cell"><div class="td-name-main">${e.name}</div></div></div>
+      <div class="td" data-col="name" style="width:${_cols.name}px;min-width:${_cols.name}px;max-width:${_cols.name}px"><div class="td-name-cell"><div class="td-name-main">${e.name}${e.private&&isAdmin()?' 🔒':''}</div></div></div>
       <div class="td" data-col="type" style="width:${_cols.type}px;min-width:${_cols.type}px;max-width:${_cols.type}px"><span class="type-pill ${tc}">${ti} ${tn}</span></div>
       <div class="td td-mono" data-col="year" style="width:${_cols.year}px;min-width:${_cols.year}px;max-width:${_cols.year}px">${e.year||'—'}</div>
       <div class="td td-mono" data-col="date" style="width:${_cols.date}px;min-width:${_cols.date}px;max-width:${_cols.date}px">${dateD}</div>
@@ -170,11 +172,15 @@ function render() {
 // ===== VIEW =====
 function setView(v) {
   _view = v;
-  document.getElementById('tableWrap').style.display = v==='table'?'':'none';
-  document.getElementById('cardsGrid').style.display = v==='cards'?'grid':'none';
+  document.getElementById('tableWrap').style.display    = v==='table'    ? '' : 'none';
+  document.getElementById('cardsGrid').style.display    = v==='cards'    ? 'grid' : 'none';
+  document.getElementById('calendarView').style.display = v==='calendar' ? '' : 'none';
   document.getElementById('vbTable').classList.toggle('active', v==='table');
   document.getElementById('vbCards').classList.toggle('active', v==='cards');
-  render();
+  const vbCal = document.getElementById('vbCal');
+  if (vbCal) vbCal.classList.toggle('active', v==='calendar');
+  if (v==='calendar') renderCalendar();
+  else render();
 }
 
 // ===== NAVIGATION =====
@@ -217,8 +223,15 @@ function sidebarFilter(key,val,el) {
 }
 function refreshGenreFilters() {
   const c = document.getElementById('genreFilters');
+  if (!c) return;
+  // Build genre list from actual entries to guarantee exact match
+  const fromEntries = [...new Set(
+    getEntries().flatMap(e => e.genres || [])
+  )];
+  // Only show genres that exist in entries, sorted alphabetically
+  const allGenres = [...new Set(fromEntries)].sort((a,b)=>a.localeCompare(b,'uk'));
   c.innerHTML = `<button class="gf${_genre==='all'?' active':''}" onclick="setGenre('all',this)">Всі</button>`
-    + getGenres().map(g=>`<button class="gf${_genre===g?' active':''}" onclick="setGenre(${JSON.stringify(g)},this)">${g}</button>`).join('');
+    + allGenres.map(g=>`<button class="gf${_genre===g?' active':''}" onclick="setGenre('${g.replace(/'/g,"\\'")}',this)">${g}</button>`).join('');
 }
 
 // ===== BADGES =====
@@ -282,7 +295,7 @@ function onStatusChange() {
 // ===== OMDB =====
 async function fetchOMDB() {
   const name = document.getElementById('fName').value.trim();
-  const key = getSettings().omdbKey;
+  const key = getSettings().omdbKey || localStorage.getItem('il_omdb_key') || (typeof OMDB_KEY_DEFAULT !== 'undefined' ? OMDB_KEY_DEFAULT : '');
   if (!name || !key) return;
   try {
     const res = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(name)}&apikey=${key}&type=movie`);
@@ -361,7 +374,7 @@ function renderGenreDropdown(filter='') {
   } else {
     placeholder.style.display='none';
     const arrow = document.getElementById('genreArrow');
-    _selectedGenres.forEach(g=>{
+    [..._selectedGenres].sort((a,b)=>a.localeCompare(b,'uk')).forEach(g=>{
       const tag = document.createElement('span');
       tag.className='gdt-tag';
       tag.innerHTML=`${g}<span class="gdt-tag-x" onclick="event.stopPropagation();removeGenreTag('${g}')">×</span>`;
@@ -370,10 +383,12 @@ function renderGenreDropdown(filter='') {
   }
 
   // Render list
-  const genres = getGenres().filter(g=>!filter||g.toLowerCase().includes(filter.toLowerCase()));
+  const genres = getGenres()
+    .filter(g=>!filter||g.toLowerCase().includes(filter.toLowerCase()))
+    .sort((a,b)=>a.localeCompare(b,'uk'));
   panel.innerHTML = genres.map(g=>{
     const sel = _selectedGenres.includes(g);
-    return `<div class="gdp-item${sel?' selected':''}" onclick="toggleGenreItem('${g}')">
+    return `<div class="gdp-item${sel?' selected':''}" onclick="event.stopPropagation();toggleGenreItem('${g}')">
       <div class="gdp-chk">${sel?'✓':''}</div>${g}
     </div>`;
   }).join('') || '<div style="padding:10px 12px;color:var(--muted);font-size:12px">Не знайдено</div>';
@@ -416,6 +431,11 @@ function toggleGenreItem(g) {
   if (idx===-1) _selectedGenres.push(g);
   else _selectedGenres.splice(idx,1);
   renderGenreDropdown(document.getElementById('genreSearch')?.value||'');
+  // Re-register outside click listener so dropdown stays open
+  setTimeout(()=>{
+    document.removeEventListener('click', closeGenreOnOutside);
+    document.addEventListener('click', closeGenreOnOutside, {once:true});
+  }, 10);
 }
 
 function removeGenreTag(g) {
@@ -428,9 +448,10 @@ function filterGenreDropdown(val) { renderGenreDropdown(val); }
 // Override saveEntry to use _selectedGenres
 async function saveEntry() {
   const id = document.getElementById('fId').value;
-  const genres = _selectedGenres.length > 0
+  const genres = (_selectedGenres.length > 0
     ? _selectedGenres
-    : document.getElementById('fGenres').value.split(',').map(g=>g.trim()).filter(Boolean);
+    : document.getElementById('fGenres').value.split(',').map(g=>g.trim()).filter(Boolean)
+  ).sort((a,b)=>a.localeCompare(b,'uk'));
   const rating = parseInt(document.getElementById('fRating').value)||null;
   const fire = document.getElementById('fFire').checked;
   const type = document.getElementById('fType').value;
@@ -457,9 +478,60 @@ async function saveEntry() {
 
 // Also patch fetchOMDB to set genres via _selectedGenres
 const _origFetchOMDB = fetchOMDB;
+
+// ===== OMDB GENRE TRANSLATION =====
+const OMDB_GENRES = {
+  'Action': 'Екшн',
+  'Adventure': 'Пригоди',
+  'Animation': 'Анімація',
+  'Biography': 'Біографія',
+  'Comedy': 'Комедія',
+  'Crime': 'Детектив',
+  'Documentary': 'Документальний',
+  'Drama': 'Драма',
+  'Family': 'Сімейний',
+  'Fantasy': 'Фентезі',
+  'Film-Noir': 'Нуар',
+  'History': 'Історичний',
+  'Horror': 'Жахи',
+  'Music': 'Музичний',
+  'Musical': 'Мюзикл',
+  'Mystery': 'Детектив',
+  'Romance': 'Романтика',
+  'Sci-Fi': 'Наукова фантастика',
+  'Science Fiction': 'Наукова фантастика',
+  'Short': 'Короткометражка',
+  'Sport': 'Спорт',
+  'Superhero': 'Супергерої',
+  'Thriller': 'Трилер',
+  'War': 'Воєнний',
+  'Western': 'Вестерн',
+  'Anime': 'Аніме',
+  'Supernatural': 'Надприродне',
+  'Psychological': 'Психологічний трилер',
+  'Mecha': 'Меха',
+  'Shounen': 'Сьонен',
+  'Seinen': 'Сейнен',
+  'Isekai': 'Ісекай',
+  'Post-Apocalyptic': 'Постапокаліпсис',
+  'Dystopia': 'Антиутопія',
+  'Cyberpunk': 'Кіберпанк',
+  'Dark Fantasy': 'Темне фентезі',
+  'Catastrophe': 'Катастрофа',
+  'Disaster': 'Катастрофа',
+};
+
+function translateGenres(genreStr) {
+  if (!genreStr) return [];
+  return genreStr.split(',').map(g => {
+    const trimmed = g.trim();
+    return OMDB_GENRES[trimmed] || trimmed;
+  }).filter(Boolean);
+}
+
 fetchOMDB = async function() {
   const name = document.getElementById('fName').value.trim();
-  const key = getSettings().omdbKey;
+  const key = getSettings().omdbKey || localStorage.getItem('il_omdb_key') || (typeof OMDB_KEY_DEFAULT !== 'undefined' ? OMDB_KEY_DEFAULT : '');
   if (!name || !key) return;
   try {
     const res = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(name)}&apikey=${key}`);
@@ -469,7 +541,7 @@ fetchOMDB = async function() {
       if (!document.getElementById('fImdb').value && d.imdbRating&&d.imdbRating!=='N/A')
         document.getElementById('fImdb').value=parseFloat(d.imdbRating)||'';
       if (_selectedGenres.length===0 && d.Genre) {
-        _selectedGenres = d.Genre.split(',').map(g=>g.trim()).filter(Boolean);
+        _selectedGenres = translateGenres(d.Genre);
         renderGenreDropdown();
       }
       if (!document.getElementById('fDur').value && d.Runtime&&d.Runtime!=='N/A') {
@@ -618,4 +690,107 @@ function exportJSON() {
   a.click();
   URL.revokeObjectURL(url);
   closeModal('exportModal');
+}
+
+// ===== CALENDAR VIEW =====
+let _calYear = new Date().getFullYear();
+let _calMonth = new Date().getMonth();
+
+function renderCalendar() {
+  const container = document.getElementById('calendarView');
+  if (!container) return;
+  const entries = getEntries();
+  const y = _calYear, m = _calMonth;
+  const monthNames = ['Січень','Лютий','Березень','Квітень','Травень','Червень',
+                      'Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+  const dayNames = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
+
+  const typeEmoji = {'film':'🎬','serial':'📺','anime-serial':'⛩️','anime-film':'🎌','mult':'🎨','mult-serial':'🎪'};
+  const typeColor = {'film':'#00bcd4','serial':'#66bb6a','anime-serial':'#f06292','anime-film':'#ce93d8','mult':'#ffb74d','mult-serial':'#ffd54f'};
+
+  const firstDay = new Date(y, m, 1);
+  const lastDay  = new Date(y, m+1, 0);
+  const totalDays = lastDay.getDate();
+
+  // Build day map
+  const dayMap = {};
+  const addDay = (d, entry, role) => {
+    if (d < 1 || d > totalDays) return;
+    if (!dayMap[d]) dayMap[d] = [];
+    dayMap[d].push({entry, role});
+  };
+
+  entries.forEach(e => {
+    if (!e.dateEnd && !e.dateStart) return;
+    const dEnd   = e.dateEnd   ? new Date(e.dateEnd)   : null;
+    const dStart = e.dateStart ? new Date(e.dateStart) : null;
+    const isRange = ['serial','anime-serial','mult-serial'].includes(e.type);
+
+    if (isRange && dStart && dEnd && dStart.getTime() !== dEnd.getTime()) {
+      const rStart = new Date(Math.max(dStart.getTime(), new Date(y,m,1).getTime()));
+      const rEnd   = new Date(Math.min(dEnd.getTime(),   new Date(y,m,totalDays).getTime()));
+      if (rStart > new Date(y,m,totalDays) || rEnd < new Date(y,m,1)) return;
+      const sd = rStart.getDate(), ed = rEnd.getDate();
+      const isActStart = dStart >= new Date(y,m,1);
+      const isActEnd   = dEnd   <= new Date(y,m,totalDays);
+      for (let d = sd; d <= ed; d++) {
+        let role = d===sd ? (isActStart ? (d===ed?'single':'start') : 'cont-start')
+                          : d===ed ? (isActEnd ? 'end' : 'cont-end') : 'mid';
+        addDay(d, e, role);
+      }
+    } else {
+      const ds = e.dateEnd || e.dateStart;
+      const d = new Date(ds);
+      if (d.getFullYear()!==y || d.getMonth()!==m) return;
+      addDay(d.getDate(), e, 'single');
+    }
+  });
+
+  const startDow = (firstDay.getDay() + 6) % 7;
+  const today = new Date();
+  let cells = '';
+
+  for (let i = 0; i < startDow; i++) cells += `<div class="cal-cell cal-empty"></div>`;
+
+  for (let d = 1; d <= totalDays; d++) {
+    const isToday = d===today.getDate() && m===today.getMonth() && y===today.getFullYear();
+    const items = dayMap[d] || [];
+    const bars  = items.filter(x => x.role !== 'single');
+    const dots  = items.filter(x => x.role === 'single');
+
+    const barHtml = bars.map(x => {
+      const e = x.entry;
+      const color = typeColor[e.type]||'var(--accent)';
+      const isStart = x.role==='start';
+      const isEnd   = x.role==='end';
+      const rL = (isStart||x.role==='single') ? '3px' : '0';
+      const rR = (isEnd  ||x.role==='single') ? '3px' : '0';
+      const borderL = (!isStart && x.role!=='cont-start') ? 'border-left:none;' : '';
+      const label = isStart ? `<span class="cal-bar-label">${typeEmoji[e.type]} ${e.name.slice(0,16)}${e.name.length>16?'…':''}</span>` : '';
+      return `<div class="cal-bar" style="background:${color}33;border:1px solid ${color}88;border-radius:${rL} ${rR} ${rR} ${rL};${borderL}" onclick="event.stopPropagation();openEditModal(${e.id})" title="${e.name}">${label}</div>`;
+    }).join('');
+
+    const dotHtml = dots.slice(0,4).map(x =>
+      `<span class="cal-dot" onclick="event.stopPropagation();openEditModal(${x.entry.id})" title="${x.entry.name}">${typeEmoji[x.entry.type]||'🎬'}</span>`
+    ).join('');
+    const more = items.length > 7 ? `<span class="cal-more">+${items.length-7}</span>` : '';
+
+    cells += `<div class="cal-cell${isToday?' cal-today':''}${items.length?' cal-has-entries':''}">
+      <div class="cal-day-num">${d}</div>
+      ${barHtml}
+      <div class="cal-dots">${dotHtml}${more}</div>
+    </div>`;
+  }
+
+  container.innerHTML = `<div class="cal-wrap">
+    <div class="cal-header">
+      <button class="cal-nav" onclick="_calMonth--;if(_calMonth<0){_calMonth=11;_calYear--;}renderCalendar()">‹</button>
+      <div class="cal-title">${monthNames[m]} ${y}</div>
+      <button class="cal-nav" onclick="_calMonth++;if(_calMonth>11){_calMonth=0;_calYear++;}renderCalendar()">›</button>
+    </div>
+    <div class="cal-grid">
+      ${dayNames.map(dn=>`<div class="cal-dow">${dn}</div>`).join('')}
+      ${cells}
+    </div>
+  </div>`;
 }
