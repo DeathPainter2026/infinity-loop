@@ -37,7 +37,8 @@ function calcStats(entries) {
   const fire = entries.filter(e => e.fire).length;
   const plan = entries.filter(e => e.status === 'plan').length;
   let totalMin = 0;
-  entries.forEach(e => { totalMin += parseDurationMinutes(e.dur); });
+  // Only count watched entries for total time
+  entries.filter(e => e.status === 'done').forEach(e => { totalMin += parseDurationMinutes(e.dur); });
   const totalH = Math.floor(totalMin / 60);
   const totalM = totalMin % 60;
   return {

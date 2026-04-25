@@ -11,8 +11,8 @@ let _deleteId = null;
 let _resizableInited = false;
 
 // ===== COLUMN WIDTHS =====
-const COL_KEYS = ['num','name','type','year','date','dur','rating','imdb','status','genres'];
-const COL_DEF  = { num:36, name:215, type:135, year:68, date:118, dur:90, rating:70, imdb:82, status:122, genres:185 };
+const COL_KEYS = ['num','name','type','year','date','dur','episodes','rating','imdb','status','genres'];
+const COL_DEF  = { num:36, name:215, type:135, year:68, date:118, dur:90, episodes:100, rating:70, imdb:82, status:122, genres:185 };
 const COL_STORE = 'il_cols';
 
 function loadCols() {
@@ -123,6 +123,7 @@ function renderTable() {
       <div class="td td-mono" data-col="year" style="width:${_cols.year}px;min-width:${_cols.year}px;max-width:${_cols.year}px">${e.year||'—'}</div>
       <div class="td td-mono" data-col="date" style="width:${_cols.date}px;min-width:${_cols.date}px;max-width:${_cols.date}px">${dateD}</div>
       <div class="td td-mono" data-col="dur" style="width:${_cols.dur}px;min-width:${_cols.dur}px;max-width:${_cols.dur}px">${durD}</div>
+      <div class="td td-mono" data-col="episodes" style="width:${_cols.episodes}px;min-width:${_cols.episodes}px;max-width:${_cols.episodes}px">${e.seasons||e.episodes ? `${e.seasons?e.seasons+'с ':' '}${e.episodes?e.episodes+'еп':''}`.trim() : '—'}</div>
       <div class="td" data-col="rating" style="width:${_cols.rating}px;min-width:${_cols.rating}px;max-width:${_cols.rating}px"><span class="r-val ${rc}">${rLabel}</span></div>
       <div class="td" data-col="imdb" style="width:${_cols.imdb}px;min-width:${_cols.imdb}px;max-width:${_cols.imdb}px">${imdbH}</div>
       <div class="td" data-col="status" style="width:${_cols.status}px;min-width:${_cols.status}px;max-width:${_cols.status}px"><span class="st-pill ${sc}">${si} ${sn}</span></div>
@@ -859,3 +860,30 @@ function renderNowWatching() {
     <div class="now-items">${items}</div>
   </div>`;
 }
+
+// ===== SIDEBAR TOGGLE =====
+let _sidebarCollapsed = false;
+
+function toggleSidebar() {
+  _sidebarCollapsed = !_sidebarCollapsed;
+  const sidebar = document.getElementById('sidebar');
+  const mainArea = document.querySelector('.main-area');
+  const btn = document.querySelector('.sidebar-toggle');
+  if (!sidebar) return;
+  sidebar.classList.toggle('collapsed', _sidebarCollapsed);
+  if (mainArea) mainArea.classList.toggle('sidebar-collapsed', _sidebarCollapsed);
+  if (btn) btn.textContent = _sidebarCollapsed ? '›' : '‹';
+  localStorage.setItem('il_sidebar', _sidebarCollapsed ? '1' : '0');
+  // Force reflow for resizable columns
+  setTimeout(() => window.dispatchEvent(new Event('resize')), 300);
+}
+
+// Restore sidebar state
+document.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('il_sidebar') === '1') {
+    setTimeout(() => {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar) toggleSidebar();
+    }, 100);
+  }
+});
