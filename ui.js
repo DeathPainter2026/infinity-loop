@@ -11,8 +11,8 @@ let _deleteId = null;
 let _resizableInited = false;
 
 // ===== COLUMN WIDTHS =====
-const COL_KEYS = ['num','name','type','year','date','dur','rating','imdb','status','genres'];
-const COL_DEF  = { num:36, name:215, type:135, year:68, date:118, dur:90, rating:70, imdb:82, status:122, genres:185 };
+const COL_KEYS = ['num','name','type','year','date','dur','episodes','rating','imdb','status','genres'];
+const COL_DEF  = { num:36, name:215, type:135, year:68, date:118, dur:90, episodes:100, rating:70, imdb:82, status:122, genres:185 };
 const COL_STORE = 'il_cols';
 
 function loadCols() {
@@ -123,6 +123,7 @@ function renderTable() {
       <div class="td td-mono" data-col="year" style="width:${_cols.year}px;min-width:${_cols.year}px;max-width:${_cols.year}px">${e.year||'—'}</div>
       <div class="td td-mono" data-col="date" style="width:${_cols.date}px;min-width:${_cols.date}px;max-width:${_cols.date}px">${dateD}</div>
       <div class="td td-mono" data-col="dur" style="width:${_cols.dur}px;min-width:${_cols.dur}px;max-width:${_cols.dur}px">${durD}</div>
+      <div class="td td-mono" data-col="episodes" style="width:${_cols.episodes}px;min-width:${_cols.episodes}px;max-width:${_cols.episodes}px">${e.seasons||e.episodes ? `${e.seasons?e.seasons+'с ':' '}${e.episodes?e.episodes+'еп':''}`.trim() : '—'}</div>
       <div class="td" data-col="rating" style="width:${_cols.rating}px;min-width:${_cols.rating}px;max-width:${_cols.rating}px"><span class="r-val ${rc}">${rLabel}</span></div>
       <div class="td" data-col="imdb" style="width:${_cols.imdb}px;min-width:${_cols.imdb}px;max-width:${_cols.imdb}px">${imdbH}</div>
       <div class="td" data-col="status" style="width:${_cols.status}px;min-width:${_cols.status}px;max-width:${_cols.status}px"><span class="st-pill ${sc}">${si} ${sn}</span></div>
@@ -163,6 +164,7 @@ function render() {
   updateBadges();
   updateKPI();
   updateYearBanner();
+  renderNowWatching();
   document.getElementById('tbSub').textContent = getFiltered().length + ' позицій';
   refreshYearFilter();
   // Re-init resizable each render (handles re-created DOM)
@@ -259,18 +261,55 @@ function updateKPI() {
 
 // ===== YEAR BANNER =====
 function updateYearBanner() {
-  const s = getSettings();
-  const e = getEntries();
-  document.getElementById('ybYear').textContent  = s.vibeYear||'2026';
-  document.getElementById('ybTitle').textContent = s.vibeTitle||'Infinity Loop';
-  document.getElementById('ybTags').textContent  = s.vibeTags||'';
-  const st = calcStats(e);
-  document.getElementById('ybCount').textContent = e.filter(x=>x.status==='done').length;
-  document.getElementById('ybHours').textContent = st.hoursStr;
-  document.getElementById('ybFire').textContent  = st.fire+'🔥';
+  const vibes = window._cache?.vibes || [];
+  const curYear = window._currentVibeYear || new Date().getFullYear();
+  const vibe = vibes.find(v => v.year === curYear);
+
+  const ybYear = document.getElementById('ybYear');
+  const ybTitle = document.getElementById('ybTitle');
+  const ybTags  = document.getElementById('ybTags');
+  if (ybYear)  ybYear.textContent  = curYear;
+  if (ybTitle) ybTitle.textContent = vibe?.title || 'Infinity Loop';
+  if (ybTags)  ybTags.textContent  = (vibe?.tags || '').replace(/\*/g, ' · ');
+
+  // Show/hide nav arrows
+  const years = vibes.map(v=>v.year).sort((a,b)=>a-b);
+  const hasPrev = years.some(y => y < curYear);
+  const hasNext = years.some(y => y > curYear);
+  const prev = document.getElementById('ybPrev');
+  const next = document.getElementById('ybNext');
+  if (prev) prev.style.opacity = hasPrev ? '1' : '0.2';
+  if (next) next.style.opacity = hasNext ? '1' : '0.2';
+
+  // Update stats for selected year
+  const entries = getEntries();
+  const yearEntries = entries.filter(e => {
+    const d = new Date(e.dateEnd || e.dateStart);
+    return d.getFullYear() === curYear && e.status === 'done';
+  });
+  const fire = yearEntries.filter(e=>e.fire).length;
+  let totalMin = 0;
+  yearEntries.forEach(e => { totalMin += parseDurationMinutes(e.dur||''); });
+  const h = Math.floor(totalMin/60), m2 = totalMin%60;
+  const hoursStr = totalMin ? `${h}:${String(m2).padStart(2,'0')}г` : '0г';
+  document.getElementById('ybCount').textContent = yearEntries.length;
+  document.getElementById('ybHours').textContent = hoursStr;
+  document.getElementById('ybFire').textContent  = `${fire}🔥`;
 }
 
-// ===== MODAL =====
+function switchVibeYear(dir) {
+  const vibes = window._cache?.vibes || [];
+  if (!vibes.length) return;
+  const years = vibes.map(v=>v.year).sort((a,b)=>a-b);
+  const curYear = window._currentVibeYear || new Date().getFullYear();
+  const curIdx = years.indexOf(curYear);
+  const newIdx = curIdx + dir;
+  if (newIdx < 0 || newIdx >= years.length) return;
+  window._currentVibeYear = years[newIdx];
+  updateYearBanner();
+}
+
+
 function overlayClick(e,id) { if(e.target.id===id) closeModal(id); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
@@ -409,7 +448,7 @@ function toggleGenreDropdown() {
     setTimeout(()=>document.getElementById('genreSearch').focus(), 50);
     // Close on outside click
     setTimeout(()=>{
-      document.addEventListener('click', closeGenreOnOutside, {once:true});
+      document.addEventListener('mousedown', closeGenreOnOutside, {once:true});
     }, 10);
   }
 }
@@ -422,7 +461,7 @@ function closeGenreOnOutside(e) {
     document.getElementById('genreArrow').textContent='▼';
   } else if (wrap && wrap.contains(e.target)) {
     // Re-attach listener
-    document.addEventListener('click', closeGenreOnOutside, {once:true});
+    document.addEventListener('mousedown', closeGenreOnOutside, {once:true});
   }
 }
 
@@ -434,7 +473,7 @@ function toggleGenreItem(g) {
   // Re-register outside click listener so dropdown stays open
   setTimeout(()=>{
     document.removeEventListener('click', closeGenreOnOutside);
-    document.addEventListener('click', closeGenreOnOutside, {once:true});
+    document.addEventListener('mousedown', closeGenreOnOutside, {once:true});
   }, 10);
 }
 
@@ -794,3 +833,60 @@ function renderCalendar() {
     </div>
   </div>`;
 }
+
+// ===== NOW WATCHING BANNER =====
+function renderNowWatching() {
+  const banner = document.getElementById('nowWatchingBanner');
+  if (!banner) return;
+  const nowItems = getEntries().filter(e => e.status === 'now');
+  if (!nowItems.length) { banner.style.display = 'none'; return; }
+
+  const typeEmoji = {'film':'🎬','serial':'📺','anime-serial':'⛩️','anime-film':'🎌','mult':'🎨','mult-serial':'🎪'};
+  
+  const items = nowItems.map(e => {
+    const emoji = typeEmoji[e.type] || '🎬';
+    const progress = e.episodes ? 
+      `<span style="font-size:11px;color:var(--muted2);margin-left:6px">серій: ${e.episodes}</span>` : '';
+    return `<div class="now-item" onclick="openEditModal(${e.id})">
+      <span class="now-emoji">${emoji}</span>
+      <span class="now-name">${e.name}</span>
+      ${progress}
+    </div>`;
+  }).join('');
+
+  banner.style.display = '';
+  banner.innerHTML = `<div class="now-banner">
+    <div class="now-label">👁️ Дивлюся зараз</div>
+    <div class="now-items">${items}</div>
+  </div>`;
+}
+
+// ===== SIDEBAR TOGGLE =====
+let _sidebarCollapsed = false;
+
+function toggleSidebar() {
+  _sidebarCollapsed = !_sidebarCollapsed;
+  const sidebar = document.getElementById('sidebar');
+  const mainArea = document.querySelector('.main-area');
+  const btn = document.querySelector('.sidebar-toggle');
+  if (_sidebarCollapsed) {
+    sidebar.classList.add('collapsed');
+    if (mainArea) mainArea.classList.add('sidebar-collapsed');
+    if (btn) btn.textContent = '›';
+  } else {
+    sidebar.classList.remove('collapsed');
+    if (mainArea) mainArea.classList.remove('sidebar-collapsed');
+    if (btn) btn.textContent = '‹';
+  }
+  localStorage.setItem('il_sidebar', _sidebarCollapsed ? '1' : '0');
+}
+
+// Restore sidebar state
+document.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('il_sidebar') === '1') {
+    setTimeout(() => {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar) toggleSidebar();
+    }, 100);
+  }
+});
