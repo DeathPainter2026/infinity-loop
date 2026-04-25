@@ -91,7 +91,6 @@ function entryToDb(e) {
     genres: e.genres || [],
     notes:   e.notes   || null,
     emoji:   e.emoji   || '🎬',
-    private: e.private || false,
   };
 }
 function dbToEntry(r) {
@@ -113,7 +112,6 @@ function dbToEntry(r) {
     genres:    r.genres     || [],
     notes:     r.notes      || '',
     emoji:     r.emoji      || '🎬',
-    private:   r.private    || false,
   };
 }
 
