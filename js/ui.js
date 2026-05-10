@@ -311,7 +311,10 @@ function switchVibeYear(dir) {
 
 
 function overlayClick(e,id) { if(e.target.id===id) closeModal(id); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModal(id) {
+  document.getElementById(id)?.classList.remove('open');
+  if (id === 'entryModal') window._monthHoursListenersActive = false;
+}
 
 
 
@@ -991,23 +994,10 @@ function setMonthHoursData(data) {
 }
 
 function setupMonthHoursListeners() {
-  const dsEl = document.getElementById('fDateStart');
-  const deEl = document.getElementById('fDateEnd');
-  const tyEl = document.getElementById('fType');
-  // Remove old listeners by replacing with clones
-  [dsEl, deEl, tyEl].forEach(el => {
-    if (!el) return;
-    const clone = el.cloneNode(true);
-    el.parentNode.replaceChild(clone, el);
-  });
+  // Use a flag to avoid duplicate listeners
+  if (window._monthHoursListenersActive) return;
+  window._monthHoursListenersActive = true;
   document.getElementById('fDateStart')?.addEventListener('change', updateMonthHoursFields);
   document.getElementById('fDateEnd')?.addEventListener('change', updateMonthHoursFields);
   document.getElementById('fType')?.addEventListener('change', updateMonthHoursFields);
-  // Re-attach original handlers
-  document.getElementById('fDateEnd')?.addEventListener('change', () => {
-    const status = document.getElementById('fStatus')?.value;
-    if (status === 'done' && !document.getElementById('fDateStart')?.value) {
-      document.getElementById('fDateStart').value = document.getElementById('fDateEnd').value;
-    }
-  });
 }

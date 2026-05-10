@@ -108,7 +108,7 @@ function cardTypesSummary(entries) {
   const tableRows=tc.map(t=>{
     const items=entries.filter(e=>e.type===t.key);
     if(!items.length) return null;
-    let mins=0; items.forEach(e=>{mins+=parseDurationMinutes(e.dur||'');});
+    let mins=0; items.forEach(e=>{mins+=entryTotalMins(e);});
     const h=Math.floor(mins/60),m=mins%60;
     const durStr=mins?`${h}:${String(m).padStart(2,'0')}`:'—';
     let extra='';
@@ -141,6 +141,15 @@ function cardTypesSummary(entries) {
       <tbody>${tableRows}</tbody>
     </table>
   </div>`;
+}
+
+
+// Helper: get total minutes for an entry (uses monthHours if available)
+function entryTotalMins(e) {
+  if (e.monthHours && Object.keys(e.monthHours).length > 0) {
+    return Object.values(e.monthHours).reduce((a,b) => a+b, 0);
+  }
+  return parseDurationMinutes(e.dur || '');
 }
 
 function renderAnalytics() {
@@ -206,7 +215,7 @@ function cardFunFacts(entries) {
   const typeItems = tc.map(t=>{
     const items=entries.filter(e=>e.type===t.key);
     if(!items.length) return null;
-    let mins=0; items.forEach(e=>{mins+=parseDurationMinutes(e.dur||'');});
+    let mins=0; items.forEach(e=>{mins+=entryTotalMins(e);});
     const h=Math.floor(mins/60), m=mins%60;
     const durStr=mins?`${h}:${String(m).padStart(2,'0')}`:'—';
     let extra='';
