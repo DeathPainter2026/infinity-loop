@@ -630,37 +630,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return parseDurationMinutes(e.dur || '');
       };
 
-      // Override cardDonutHours to use entryTotalMins
-      const _origDonutHours = cardDonutHours;
-      window.cardDonutHours = function(entries) {
-        const tc = typeConfig();
-        let total = 0;
-        entries.forEach(e => { total += entryTotalMins(e); });
-        if (!total) return '';
-        const slices = tc.map(t => {
-          let mins = 0;
-          entries.filter(x => x.type === t.key).forEach(e => { mins += entryTotalMins(e); });
-          return { ...t, mins };
-        }).filter(t => t.mins > 0);
-        const h = Math.floor(total/60), m = total%60;
-        const totalStr = `${h}:${String(m).padStart(2,'0')}`;
-        const R = 70, cx = 90, cy = 90, stroke = 28;
-        const circ = 2 * Math.PI * R;
-        let offset = 0;
-        const paths = slices.map(t => {
-          const dash = (t.mins / total) * circ;
-          const path = `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${t.color}" stroke-width="${stroke}" stroke-dasharray="${dash.toFixed(2)} ${(circ-dash).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}" style="transition:stroke-dasharray 0.5s"/>`;
-          offset += dash;
-          return path;
-        }).join('');
-        const legend = slices.map(t => {
-          const th = Math.floor(t.mins/60), tm = t.mins%60;
-          return `<div class="donut-leg-item"><span class="dl-dot" style="background:${t.color}"></span><span class="dl-name">${t.label}</span><span class="dl-val">${th}:${String(tm).padStart(2,'0')}</span></div>`;
-        }).join('');
-        return `<div class="an-card"><div class="an-ttl"><span>⏱</span> По годинах</div><div class="donut-wrap"><svg viewBox="0 0 180 180" width="160" height="160" style="transform:rotate(-90deg)"><circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="var(--bg3)" stroke-width="${stroke}"/>${paths}</svg><div class="donut-center"><div class="donut-val">${totalStr}</div><div class="donut-sub">годин</div></div></div><div class="donut-legend">${legend}</div></div>`;
-      };
-
-      console.log('Analytics helpers patched with monthHours support');
+            console.log('Analytics helpers patched with monthHours support');
     }
   }, 100);
 });
