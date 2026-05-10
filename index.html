@@ -658,6 +658,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
       };
       console.log('calcStats patched with monthHours support');
+      // Re-run KPI with patched calcStats
+      if (typeof updateKPI === 'function') updateKPI();
+      if (typeof render === 'function') render();
     }
   }, 150);
 });
