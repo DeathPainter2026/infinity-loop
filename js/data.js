@@ -38,14 +38,7 @@ function calcStats(entries) {
   const plan = entries.filter(e => e.status === 'plan').length;
   let totalMin = 0;
   // Only count watched entries for total time
-  entries.filter(e => e.status === 'done').forEach(e => {
-    if (e.monthHours && Object.keys(e.monthHours).length > 0) {
-      // Use manual month hours data
-      totalMin += Object.values(e.monthHours).reduce((a,b) => a+b, 0);
-    } else {
-      totalMin += parseDurationMinutes(e.dur);
-    }
-  });
+  entries.filter(e => e.status === 'done').forEach(e => { totalMin += entryTotalMins(e); });
   const totalH = Math.floor(totalMin / 60);
   const totalM = totalMin % 60;
   return {
@@ -125,4 +118,11 @@ async function updateAdminPass(newPass) {
   await dbUpdateAdminPass(newPass);
   const admin = window._cache.users.find(u => u.role === 'admin');
   if (admin) admin.pass = newPass;
+}
+
+function entryTotalMins(e) {
+  if (e.monthHours && Object.keys(e.monthHours).length > 0) {
+    return Object.values(e.monthHours).reduce((a,b) => a+b, 0);
+  }
+  return parseDurationMinutes(e.dur || '');
 }

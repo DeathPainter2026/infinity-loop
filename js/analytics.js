@@ -297,7 +297,7 @@ function cardDonutCount(entries) {
 function cardDonutHours(entries) {
   const tc = typeConfig();
   const typeMins=tc.map(t=>{
-    let m=0; entries.filter(e=>e.type===t.key).forEach(e=>{m+=parseDurationMinutes(e.dur||'');});
+    let m=0; entries.filter(e=>e.type===t.key).forEach(e=>{m+=entryTotalMins(e);});
     return {...t, mins:m};
   });
   const totalMin=typeMins.reduce((s,t)=>s+t.mins,0);
