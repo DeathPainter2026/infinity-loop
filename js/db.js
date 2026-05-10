@@ -91,6 +91,7 @@ function entryToDb(e) {
     genres: e.genres || [],
     notes:   e.notes   || null,
     emoji:   e.emoji   || '🎬',
+    month_hours: e.monthHours ? JSON.stringify(e.monthHours) : null,
   };
 }
 function dbToEntry(r) {
@@ -112,6 +113,7 @@ function dbToEntry(r) {
     genres:    r.genres     || [],
     notes:     r.notes      || '',
     emoji:     r.emoji      || '🎬',
+    monthHours: r.month_hours ? JSON.parse(r.month_hours) : null,
   };
 }
 

@@ -13,6 +13,17 @@ function getMonthlyHours(entries) {
     const dStart = new Date(e.dateStart || e.dateEnd);
     if (isNaN(dEnd) || isNaN(dStart)) return;
     
+    // Use manual month hours if provided
+    if (e.monthHours && Object.keys(e.monthHours).length > 0) {
+      Object.entries(e.monthHours).forEach(([key, mins]) => {
+        // key format: "2026-3" (year-month_index)
+        const [y, m] = key.split('-').map(Number);
+        const monthKey = `${y}-${String(m+1).padStart(2,'0')}`;
+        monthMins[monthKey] = (monthMins[monthKey] || 0) + mins;
+      });
+      return;
+    }
+    
     const isSerial = ['serial','anime-serial','mult-serial'].includes(e.type);
     const startKey = `${dStart.getFullYear()}-${String(dStart.getMonth()+1).padStart(2,'0')}`;
     const endKey   = `${dEnd.getFullYear()}-${String(dEnd.getMonth()+1).padStart(2,'0')}`;

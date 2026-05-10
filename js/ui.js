@@ -372,7 +372,11 @@ function openAddModal() {
   _selectedGenres=[];
   renderGenreDropdown();
   document.getElementById('entryModal').classList.add('open');
-  setTimeout(()=>document.getElementById('fName').focus(),100);
+  setTimeout(() => {
+    document.getElementById('fName').focus();
+    updateMonthHoursFields();
+    setupMonthHoursListeners();
+  }, 100);
 }
 
 function openEditModal(id) {
@@ -397,6 +401,12 @@ function openEditModal(id) {
   renderGenreDropdown();
   document.getElementById('delBtn').style.display='';
   document.getElementById('entryModal').classList.add('open');
+  // Setup month hours
+  setTimeout(() => {
+    updateMonthHoursFields();
+    if (e.monthHours) setMonthHoursData(e.monthHours);
+    setupMonthHoursListeners();
+  }, 50);
 }
 
 function renderGenreDropdown(filter='') {
@@ -495,6 +505,7 @@ async function saveEntry() {
   const fire = document.getElementById('fFire').checked;
   const type = document.getElementById('fType').value;
   const emojiMap={film:'🎬',serial:'📺','anime-serial':'⛩️','anime-film':'🎌',mult:'🎨','mult-serial':'🎪'};
+  const monthHours = getMonthHoursData();
   const entry = {
     name:      document.getElementById('fName').value.trim(),
     type, status:document.getElementById('fStatus').value,
@@ -508,6 +519,7 @@ async function saveEntry() {
     imdb:      parseFloat(document.getElementById('fImdb').value)||null,
     genres, notes:'',
     emoji: emojiMap[type]||'🎬',
+    monthHours: monthHours || null,
   };
   if (!entry.name) { alert('Введіть назву!'); return; }
   if (id) await updateEntry(parseInt(id), entry); else await addEntry(entry);
@@ -887,3 +899,115 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
   }
 });
+
+// ===== MONTH HOURS BREAKDOWN =====
+const MONTH_NAMES = ['Січень','Лютий','Березень','Квітень','Травень','Червень',
+                     'Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+
+function updateMonthHoursFields() {
+  const wrap = document.getElementById('monthHoursWrap');
+  const list = document.getElementById('monthHoursList');
+  if (!wrap || !list) return;
+
+  const isSerial = ['serial','anime-serial','mult-serial'].includes(
+    document.getElementById('fType')?.value
+  );
+  if (!isSerial) { wrap.style.display = 'none'; return; }
+
+  const startVal = document.getElementById('fDateStart')?.value;
+  const endVal   = document.getElementById('fDateEnd')?.value;
+  if (!startVal || !endVal) { wrap.style.display = 'none'; return; }
+
+  const dStart = new Date(startVal);
+  const dEnd   = new Date(endVal);
+  if (isNaN(dStart) || isNaN(dEnd)) { wrap.style.display = 'none'; return; }
+
+  // Same month - no need for breakdown
+  if (dStart.getFullYear() === dEnd.getFullYear() && dStart.getMonth() === dEnd.getMonth()) {
+    wrap.style.display = 'none';
+    return;
+  }
+
+  // Build list of months in range
+  const months = [];
+  let cur = new Date(dStart.getFullYear(), dStart.getMonth(), 1);
+  const endM = new Date(dEnd.getFullYear(), dEnd.getMonth(), 1);
+  while (cur <= endM) {
+    months.push({ y: cur.getFullYear(), m: cur.getMonth() });
+    cur.setMonth(cur.getMonth() + 1);
+  }
+
+  // Preserve existing values
+  const existing = {};
+  list.querySelectorAll('.mh-row').forEach(row => {
+    const key = row.dataset.key;
+    const h = row.querySelector('.mh-h')?.value || '';
+    const min = row.querySelector('.mh-min')?.value || '';
+    if (h || min) existing[key] = { h, min };
+  });
+
+  list.innerHTML = months.map(({ y, m }) => {
+    const key = `${y}-${m}`;
+    const val = existing[key] || {};
+    return `<div class="mh-row f2" data-key="${key}" style="gap:8px;align-items:center">
+      <div style="font-size:12px;color:var(--text);min-width:110px">${MONTH_NAMES[m]} ${y}</div>
+      <div style="display:flex;gap:4px;align-items:center">
+        <input class="fi mh-h" type="number" min="0" max="999" placeholder="0" value="${val.h||''}" style="width:56px" title="Годин">
+        <span style="color:var(--muted2);font-size:12px">г</span>
+        <input class="fi mh-min" type="number" min="0" max="59" placeholder="0" value="${val.min||''}" style="width:50px" title="Хвилин">
+        <span style="color:var(--muted2);font-size:12px">хв</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  wrap.style.display = '';
+}
+
+function getMonthHoursData() {
+  const result = {};
+  document.querySelectorAll('.mh-row').forEach(row => {
+    const key = row.dataset.key;
+    const h   = parseInt(row.querySelector('.mh-h')?.value  || '0') || 0;
+    const min = parseInt(row.querySelector('.mh-min')?.value || '0') || 0;
+    if (h || min) result[key] = h * 60 + min;
+  });
+  return Object.keys(result).length ? result : null;
+}
+
+function setMonthHoursData(data) {
+  if (!data) return;
+  document.querySelectorAll('.mh-row').forEach(row => {
+    const key = row.dataset.key;
+    if (data[key] !== undefined) {
+      const total = data[key];
+      const h = Math.floor(total / 60);
+      const min = total % 60;
+      const hInp = row.querySelector('.mh-h');
+      const mInp = row.querySelector('.mh-min');
+      if (hInp) hInp.value = h || '';
+      if (mInp) mInp.value = min || '';
+    }
+  });
+}
+
+function setupMonthHoursListeners() {
+  const dsEl = document.getElementById('fDateStart');
+  const deEl = document.getElementById('fDateEnd');
+  const tyEl = document.getElementById('fType');
+  // Remove old listeners by replacing with clones
+  [dsEl, deEl, tyEl].forEach(el => {
+    if (!el) return;
+    const clone = el.cloneNode(true);
+    el.parentNode.replaceChild(clone, el);
+  });
+  document.getElementById('fDateStart')?.addEventListener('change', updateMonthHoursFields);
+  document.getElementById('fDateEnd')?.addEventListener('change', updateMonthHoursFields);
+  document.getElementById('fType')?.addEventListener('change', updateMonthHoursFields);
+  // Re-attach original handlers
+  document.getElementById('fDateEnd')?.addEventListener('change', () => {
+    const status = document.getElementById('fStatus')?.value;
+    if (status === 'done' && !document.getElementById('fDateStart')?.value) {
+      document.getElementById('fDateStart').value = document.getElementById('fDateEnd').value;
+    }
+  });
+}
