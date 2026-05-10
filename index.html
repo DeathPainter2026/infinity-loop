@@ -576,62 +576,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 <script>
-// Override getMonthlyHours to support monthHours field
 document.addEventListener('DOMContentLoaded', () => {
-  const _waitForFn = setInterval(() => {
-    if (typeof getMonthlyHours !== 'undefined') {
-      clearInterval(_waitForFn);
+  const _wait = setInterval(() => {
+    if (typeof getMonthlyHours !== 'undefined' && typeof parseDurationMinutes !== 'undefined') {
+      clearInterval(_wait);
+
+      // Override getMonthlyHours with monthHours support
       window.getMonthlyHours = function(entries) {
         const monthMins = {};
-
         entries.forEach(e => {
           if (!e.dateEnd && !e.dateStart) return;
-          const totalMin = parseDurationMinutes(e.dur || '');
-
-          // Use manual month hours if provided
+          // Use manual monthHours if available
           if (e.monthHours && Object.keys(e.monthHours).length > 0) {
             Object.entries(e.monthHours).forEach(([key, mins]) => {
               const parts = key.split('-').map(Number);
               const monthKey = `${parts[0]}-${String(parts[1]+1).padStart(2,'0')}`;
-              monthMins[monthKey] = (monthMins[monthKey] || 0) + mins;
+              monthMins[monthKey] = (monthMins[monthKey]||0) + mins;
             });
             return;
           }
-
+          const totalMin = parseDurationMinutes(e.dur || '');
           if (!totalMin) return;
           const dEnd   = new Date(e.dateEnd   || e.dateStart);
           const dStart = new Date(e.dateStart || e.dateEnd);
           if (isNaN(dEnd) || isNaN(dStart)) return;
-
           const isSerial = ['serial','anime-serial','mult-serial'].includes(e.type);
           const startKey = `${dStart.getFullYear()}-${String(dStart.getMonth()+1).padStart(2,'0')}`;
           const endKey   = `${dEnd.getFullYear()}-${String(dEnd.getMonth()+1).padStart(2,'0')}`;
-
           if (!isSerial || startKey === endKey) {
-            monthMins[endKey] = (monthMins[endKey] || 0) + totalMin;
+            monthMins[endKey] = (monthMins[endKey]||0) + totalMin;
             return;
           }
-
           const eps = e.episodes || 0;
           if (eps > 0) {
             const mPerEp = totalMin / eps;
             const endMonthStart = new Date(dEnd.getFullYear(), dEnd.getMonth(), 1);
             const daysInEnd = Math.round((dEnd - endMonthStart) / 86400000) + 1;
             const endEps = Math.min(eps, daysInEnd * 2);
-            monthMins[endKey]   = (monthMins[endKey]   || 0) + Math.round(endEps * mPerEp);
-            monthMins[startKey] = (monthMins[startKey] || 0) + (totalMin - Math.round(endEps * mPerEp));
+            monthMins[endKey]   = (monthMins[endKey]  ||0) + Math.round(endEps * mPerEp);
+            monthMins[startKey] = (monthMins[startKey]||0) + (totalMin - Math.round(endEps * mPerEp));
           } else {
-            monthMins[endKey] = (monthMins[endKey] || 0) + totalMin;
+            monthMins[endKey] = (monthMins[endKey]||0) + totalMin;
           }
         });
-
         return monthMins;
       };
-      console.log('getMonthlyHours patched with monthHours support');
+
+      // Override entryTotalMins helper
+      window.entryTotalMins = function(e) {
+        if (e.monthHours && Object.keys(e.monthHours).length > 0) {
+          return Object.values(e.monthHours).reduce((a,b) => a+b, 0);
+        }
+        return parseDurationMinutes(e.dur || '');
+      };
+
+      console.log('Analytics helpers patched with monthHours support');
     }
   }, 100);
 });
 </script>
 
 </body>
-</html>
