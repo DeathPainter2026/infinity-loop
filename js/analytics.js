@@ -462,21 +462,30 @@ function cardMonthlyByType(entries) {
 
   const usedTypes=tc.filter(t=>entries.some(e=>e.type===t.key));
 
-  const typeHours={};
+   const typeHours={};
   entries.forEach(e=>{
     if(!e.dateEnd&&!e.dateStart) return;
-    const totalMin=parseDurationMinutes(e.dur||'');
-    if(!totalMin) return;
     const dEnd=new Date(e.dateEnd||e.dateStart);
     const dStart=new Date(e.dateStart||e.dateEnd);
     if(isNaN(dEnd)) return;
     if(dEnd.getFullYear()!==curY&&dStart.getFullYear()!==curY) return;
-    const isSerial=['serial','anime-serial','mult-serial'].includes(e.type);
-    const endM=dEnd.getMonth();
     const addH=(mi,mins)=>{
       if(!typeHours[mi]) typeHours[mi]={};
       typeHours[mi][e.type]=(typeHours[mi][e.type]||0)+mins/60;
     };
+    // Use manual monthHours if available
+    if(e.monthHours && Object.keys(e.monthHours).length>0){
+      Object.entries(e.monthHours).forEach(([key,mins])=>{
+        const parts=key.split('-').map(Number);
+        const mi=parts[1]; // month index 0-11
+        if(new Date(parts[0],mi,1).getFullYear()===curY) addH(mi,mins);
+      });
+      return;
+    }
+    const totalMin=parseDurationMinutes(e.dur||'');
+    if(!totalMin) return;
+    const isSerial=['serial','anime-serial','mult-serial'].includes(e.type);
+    const endM=dEnd.getMonth();
     if(!isSerial||dStart.getMonth()===endM){
       addH(endM,totalMin);
     } else {
@@ -491,6 +500,7 @@ function cardMonthlyByType(entries) {
       } else { addH(endM,totalMin); }
     }
   });
+
 
   const rows=activeIdx.map(i=>{
     const total=Object.values(mData[i]).reduce((a,b)=>a+b,0);
