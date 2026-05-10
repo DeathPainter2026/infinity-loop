@@ -144,10 +144,11 @@ function cardTypesSummary(entries) {
 }
 
 function renderAnalytics() {
-  const entries = getEntries();
-  const done = entries.filter(e=>e.status==='done');
+  const allEntries = getEntries();
+  const entries = allEntries.filter(e=>e.status==='done');
+  const done = entries;
   document.getElementById('anContent').innerHTML = `
-    ${cardQuickFacts(entries)}
+    ${cardQuickFacts(allEntries)}
     <div class="an-grid" style="margin-top:16px">
       ${cardDonutCount(entries)}
       ${cardDonutHours(entries)}
