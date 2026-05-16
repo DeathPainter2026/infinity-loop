@@ -251,9 +251,14 @@ function updateBadges() {
 function updateKPI() {
   const e = getEntries();
   const st = calcStats(e);
+  // Use getMonthlyHours for accurate time (accounts for monthHours field)
+  const done = e.filter(x => x.status === 'done');
+  const mh = getMonthlyHours(done);
+  const totalMin = Object.values(mh).reduce((a,b) => a+b, 0);
+  const h = Math.floor(totalMin/60), m = totalMin%60;
   document.getElementById('kTotal').textContent = st.total;
-  document.getElementById('kHours').textContent = st.hoursStr;
-  document.getElementById('kDays').textContent  = `≈ ${st.daysStr} днів`;
+  document.getElementById('kHours').textContent = `${h}:${String(m).padStart(2,'0')}`;
+  document.getElementById('kDays').textContent  = `≈ ${(totalMin/60/24).toFixed(1)} днів`;
   document.getElementById('kAvg').textContent   = st.avg;
   document.getElementById('kFire').textContent  = st.fire;
   document.getElementById('kPlan').textContent  = st.plan;
