@@ -669,10 +669,10 @@ document.addEventListener('DOMContentLoaded', () => {
 </body
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const _patch = setInterval(() => {
-    if (typeof getMonthlyHours === 'undefined' || typeof updateKPI === 'undefined') return;
-    clearInterval(_patch);
+(function applyPatch() {
+  if (typeof getMonthlyHours === 'undefined' || typeof updateKPI === 'undefined') {
+    setTimeout(applyPatch, 100); return;
+  }
 
     // 1. Patch getMonthlyHours
     window.getMonthlyHours = function(entries) {
@@ -734,7 +734,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Re-render to apply patches
     if (typeof render === 'function') render();
     console.log('All patches applied');
-  }, 200);
-});
+})();
 </script>
 </body>
