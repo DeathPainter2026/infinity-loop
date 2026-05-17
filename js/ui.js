@@ -293,8 +293,9 @@ function updateYearBanner() {
     return d.getFullYear() === curYear && e.status === 'done';
   });
   const fire = yearEntries.filter(e=>e.fire).length;
-  let totalMin = 0;
-  yearEntries.forEach(e => { totalMin += parseDurationMinutes(e.dur||''); });
+  // Use getMonthlyHours for accurate time (handles monthHours field)
+  const mh = getMonthlyHours(yearEntries);
+  const totalMin = Object.values(mh).reduce((a,b)=>a+b,0);
   const h = Math.floor(totalMin/60), m2 = totalMin%60;
   const hoursStr = totalMin ? `${h}:${String(m2).padStart(2,'0')}г` : '0г';
   document.getElementById('ybCount').textContent = yearEntries.length;
