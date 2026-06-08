@@ -117,7 +117,7 @@ function renderTable() {
       : '<span class="td-mono" style="color:var(--muted)">—</span>';
 
     return `<div class="t-row" onclick="${admin?`openEditModal(${e.id})`:''}">
-      <div class="td td-num" data-col="num" style="width:${_cols.num}px;min-width:${_cols.num}px;max-width:${_cols.num}px">${i+1}</div>
+      <div class="td td-num" data-col="num" style="width:${_cols.num}px;min-width:${_cols.num}px;max-width:${_cols.num}px">${data.length-i}</div>
       <div class="td" data-col="name" style="width:${_cols.name}px;min-width:${_cols.name}px;max-width:${_cols.name}px"><div class="td-name-cell"><div class="td-name-main">${e.name}${e.private&&isAdmin()?' 🔒':''}</div></div></div>
       <div class="td" data-col="type" style="width:${_cols.type}px;min-width:${_cols.type}px;max-width:${_cols.type}px"><span class="type-pill ${tc}">${ti} ${tn}</span></div>
       <div class="td td-mono" data-col="year" style="width:${_cols.year}px;min-width:${_cols.year}px;max-width:${_cols.year}px">${e.year||'—'}</div>
