@@ -181,8 +181,8 @@ function cardRatingDivergence(entries) {
   if (!done.length) return '';
 
   const withDiff = done.map(e => ({ ...e, diff: e.rating - e.imdb }));
-  const loved = [...withDiff].filter(e => e.diff > 0).sort((a,b) => b.diff - a.diff).slice(0, 10);
-  const overrated = [...withDiff].filter(e => e.diff < 0).sort((a,b) => a.diff - b.diff).slice(0, 10);
+  const loved = [...withDiff].filter(e => e.diff > 0).sort((a,b) => b.diff - a.diff).slice(0, 20);
+  const overrated = [...withDiff].filter(e => e.diff < 0).sort((a,b) => a.diff - b.diff).slice(0, 20);
 
   const typeEmoji = {'film':'🎬','serial':'📺','anime-serial':'⛩️','anime-film':'🎌','mult':'🎨','mult-serial':'🎪'};
 
@@ -390,9 +390,9 @@ function cardDonutHours(entries) {
 function cardTopGenres(entries) {
   const counts={};
   entries.forEach(e=>(e.genres||[]).forEach(g=>{counts[g]=(counts[g]||0)+1;}));
-  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,15);
   const max=sorted[0]?.[1]||1;
-  const colors=['var(--c-now)','#00bcd4','var(--c-done)','#f06292','var(--c-plan)','#ffb74d','#ff6b35','var(--c-drop)'];
+  const colors=['var(--c-now)','#00bcd4','var(--c-done)','#f06292','var(--c-plan)','#ffb74d','#ff6b35','var(--c-drop)','#9575cd','#4db6ac','#ffd54f','#e57373','#7986cb','#aed581','#ba68c8'];
   const bars=sorted.map(([g,c],i)=>`<div class="bar-row">
     <div class="bar-lbl">${g}</div>
     <div class="bar-track"><div class="bar-fill" style="width:${(c/max*100).toFixed(0)}%;background:${colors[i%colors.length]}"></div></div>
