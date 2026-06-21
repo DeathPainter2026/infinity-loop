@@ -152,6 +152,63 @@ function entryTotalMins(e) {
   return parseDurationMinutes(e.dur || '');
 }
 
+
+// ===== TOP RATED FILMS =====
+function cardTopRated(entries) {
+  const done = entries.filter(e => e.status === 'done' && e.rating);
+  const top = [...done].sort((a,b) => b.rating - a.rating).slice(0, 10);
+  if (!top.length) return '';
+
+  const typeEmoji = {'film':'🎬','serial':'📺','anime-serial':'⛩️','anime-film':'🎌','mult':'🎨','mult-serial':'🎪'};
+
+  const rows = top.map((e, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+      <div style="width:20px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted2)">${i+1}</div>
+      <div style="font-size:14px">${typeEmoji[e.type]||'🎬'}</div>
+      <div style="flex:1;font-size:13px;color:var(--text)">${e.name}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${e.fire?'#ff6b35':'var(--accent)'}">${e.rating}${e.fire?' 🔥':''}</div>
+    </div>`).join('');
+
+  return `<div class="an-card">
+    <div class="an-ttl"><span>🏆</span> Топ за оцінкою</div>
+    ${rows}
+  </div>`;
+}
+
+// ===== RATING vs IMDb DIVERGENCE =====
+function cardRatingDivergence(entries) {
+  const done = entries.filter(e => e.status === 'done' && e.rating && e.imdb);
+  if (!done.length) return '';
+
+  const withDiff = done.map(e => ({ ...e, diff: e.rating - e.imdb }));
+  const loved = [...withDiff].filter(e => e.diff > 0).sort((a,b) => b.diff - a.diff).slice(0, 5);
+  const overrated = [...withDiff].filter(e => e.diff < 0).sort((a,b) => a.diff - b.diff).slice(0, 5);
+
+  const typeEmoji = {'film':'🎬','serial':'📺','anime-serial':'⛩️','anime-film':'🎌','mult':'🎨','mult-serial':'🎪'};
+
+  const renderList = (list, color) => list.map(e => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:13px">${typeEmoji[e.type]||'🎬'}</div>
+      <div style="flex:1;font-size:12px;color:var(--text)">${e.name}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2)">${e.rating} vs ${e.imdb}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${color}">${e.diff>0?'+':''}${e.diff.toFixed(1)}</div>
+    </div>`).join('') || '<div style="color:var(--muted);font-size:12px;padding:8px 0">Немає даних</div>';
+
+  return `<div class="an-card span2">
+    <div class="an-ttl"><span>📊</span> Розбіжність з IMDb</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:8px">
+      <div>
+        <div style="font-size:11px;color:#66bb6a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">❤️ Я ціную більше ніж IMDb</div>
+        ${renderList(loved, '#66bb6a')}
+      </div>
+      <div>
+        <div style="font-size:11px;color:#ef5350;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">👎 IMDb хвалить, я не вражений</div>
+        ${renderList(overrated, '#ef5350')}
+      </div>
+    </div>
+  </div>`;
+}
+
 function renderAnalytics() {
   const allEntries = getEntries();
   const entries = allEntries.filter(e=>e.status==='done');
@@ -166,6 +223,10 @@ function renderAnalytics() {
     </div>
     <div style="margin-top:16px">${cardHoursLineChart(entries)}</div>
     <div style="margin-top:16px">${cardTypesSummary(entries)}</div>
+    <div class="an-grid" style="margin-top:16px">
+      ${cardTopRated(entries)}
+      ${cardRatingDivergence(entries)}
+    </div>
     <div style="margin-top:16px">${cardMonthlyByType(entries)}</div>
     ${cardByReleaseYear(entries)}`;
 }
