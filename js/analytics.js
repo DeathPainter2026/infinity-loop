@@ -181,8 +181,8 @@ function cardRatingDivergence(entries) {
   if (!done.length) return '';
 
   const withDiff = done.map(e => ({ ...e, diff: e.rating - e.imdb }));
-  const loved = [...withDiff].filter(e => e.diff > 0).sort((a,b) => b.diff - a.diff).slice(0, 5);
-  const overrated = [...withDiff].filter(e => e.diff < 0).sort((a,b) => a.diff - b.diff).slice(0, 5);
+  const loved = [...withDiff].filter(e => e.diff > 0).sort((a,b) => b.diff - a.diff).slice(0, 10);
+  const overrated = [...withDiff].filter(e => e.diff < 0).sort((a,b) => a.diff - b.diff).slice(0, 10);
 
   const typeEmoji = {'film':'🎬','serial':'📺','anime-serial':'⛩️','anime-film':'🎌','mult':'🎨','mult-serial':'🎪'};
 
@@ -223,10 +223,7 @@ function renderAnalytics() {
     </div>
     <div style="margin-top:16px">${cardHoursLineChart(entries)}</div>
     <div style="margin-top:16px">${cardTypesSummary(entries)}</div>
-    <div class="an-grid" style="margin-top:16px">
-      ${cardTopRated(entries)}
-      ${cardRatingDivergence(entries)}
-    </div>
+    <div style="margin-top:16px">${cardRatingDivergence(entries)}</div>
     <div style="margin-top:16px">${cardMonthlyByType(entries)}</div>
     ${cardByReleaseYear(entries)}`;
 }
