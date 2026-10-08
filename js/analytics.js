@@ -713,7 +713,7 @@ const MONTHS_SHORT = ['Січ','Лют','Бер','Кві','Тра','Чер','Л�
 function yearStats(y) {
   const list = getEntries().filter(e => e.status === 'done' && entryYear(e) === y);
   const rated = list.filter(e => e.rating).map(e => parseInt(e.rating));
-  const hrs = Array(12).fill(0), cnt = Array(12).fill(0), types = {};
+  const hrs = Array(12).fill(0), cnt = Array(12).fill(0), types = {}, sn = {}, ep = {};
   Object.entries(getMonthlyHours(list)).forEach(([k, mins]) => {
     const [yy, mm] = k.split('-').map(Number);
     if (yy === y && mm >= 1 && mm <= 12) hrs[mm - 1] += mins / 60;
@@ -721,6 +721,8 @@ function yearStats(y) {
   list.forEach(e => {
     cnt[new Date(e.dateEnd || e.dateStart).getMonth()]++;
     types[e.type] = (types[e.type] || 0) + 1;
+    sn[e.type] = (sn[e.type] || 0) + (parseInt(e.seasons) || 0);
+    ep[e.type] = (ep[e.type] || 0) + (parseInt(e.episodes) || 0);
   });
   const maxC = Math.max(...cnt);
   return {
@@ -729,7 +731,7 @@ function yearStats(y) {
     avg: rated.length ? rated.reduce((a, b) => a + b, 0) / rated.length : 0,
     fire: list.filter(e => e.fire).length,
     top: maxC > 0 ? ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'][cnt.indexOf(maxC)] : '—',
-    hrs, types
+    hrs, types, sn, ep
   };
 }
 function setCmp(which, v) {
@@ -775,7 +777,15 @@ function renderCompare() {
         ${row('⭐ Середня оцінка', A.avg ? A.avg.toFixed(1) : '—', B.avg ? B.avg.toFixed(1) : '—', cmpDelta(A.avg, B.avg, 1))}
         ${row('🔥 Шедеврів', A.fire, B.fire, cmpDelta(A.fire, B.fire))}
         ${row('📅 Топ місяць', A.top, B.top, '')}
-        ${types.map(t => row(t.label, A.types[t.key] || 0, B.types[t.key] || 0, cmpDelta(A.types[t.key] || 0, B.types[t.key] || 0))).join('')}
+        ${types.map(t => {
+          let out = row(t.label, A.types[t.key] || 0, B.types[t.key] || 0, cmpDelta(A.types[t.key] || 0, B.types[t.key] || 0));
+          if (t.serial) {
+            const sa = A.sn[t.key] || 0, sb = B.sn[t.key] || 0, ea = A.ep[t.key] || 0, eb = B.ep[t.key] || 0;
+            if (sa || sb) out += row('&nbsp;&nbsp;↳ сезонів', sa, sb, cmpDelta(sa, sb));
+            if (ea || eb) out += row('&nbsp;&nbsp;↳ серій', ea, eb, cmpDelta(ea, eb));
+          }
+          return out;
+        }).join('')}
       </div>
     </div>
     <div class="an-card">

@@ -84,7 +84,7 @@ function getFiltered() {
     data = data.filter(e=>e.type===_typeTab);
   }
   if (_genre!=='all') data = data.filter(e=>(e.genres||[]).includes(_genre));
-  if (_yearFilter!=='all') data = data.filter(e=>(e.dateEnd||e.dateStart||'').startsWith(_yearFilter) || (e.year||'').includes(_yearFilter));
+  if (_yearFilter!=='all') data = data.filter(e=>{ const d=(e.dateEnd||e.dateStart||''); return d ? d.startsWith(_yearFilter) : true; });
   if (_search) data = data.filter(e=>e.name.toLowerCase().includes(_search.toLowerCase()));
   data = [...data];
   if (_sort==='date_desc')   data.sort((a,b)=>(b.dateEnd||b.dateStart||'').localeCompare(a.dateEnd||a.dateStart||''));
@@ -266,32 +266,39 @@ function updateKPI() {
 }
 
 // ===== YEAR BANNER =====
+function navYears() {
+  const set = new Set([new Date().getFullYear()]);
+  (window._cache?.vibes||[]).forEach(v => set.add(v.year));
+  getEntries().forEach(e => { const y = parseInt((e.dateEnd||e.dateStart||'').substring(0,4)); if (y) set.add(y); });
+  return [...set].sort((a,b)=>a-b);
+}
+
 function updateYearBanner() {
   const vibes = window._cache?.vibes || [];
-  const curYear = window._currentVibeYear || new Date().getFullYear();
-  const vibe = vibes.find(v => v.year === curYear);
+  const sel = window._currentVibeYear;
+  const isAll = sel === 'all';
+  const curYear = isAll ? null : (sel || new Date().getFullYear());
+  const vibe = isAll ? null : vibes.find(v => v.year === curYear);
 
   const ybYear = document.getElementById('ybYear');
   const ybTitle = document.getElementById('ybTitle');
   const ybTags  = document.getElementById('ybTags');
-  if (ybYear)  ybYear.textContent  = curYear;
-  if (ybTitle) ybTitle.textContent = vibe?.title || 'Infinity Loop';
-  if (ybTags)  ybTags.textContent  = (vibe?.tags || '').replace(/\*/g, ' · ');
+  if (ybYear)  ybYear.textContent  = isAll ? '∞' : curYear;
+  if (ybTitle) ybTitle.textContent = isAll ? 'Весь час' : (vibe?.title || 'Infinity Loop');
+  if (ybTags)  ybTags.textContent  = isAll ? '' : (vibe?.tags || '').replace(/\*/g, ' · ');
 
-  // Show/hide nav arrows
-  const years = vibes.map(v=>v.year).sort((a,b)=>a-b);
-  const hasPrev = years.some(y => y < curYear);
-  const hasNext = years.some(y => y > curYear);
+  const years = navYears();
+  const hasPrev = isAll ? years.length > 0 : years.some(y => y < curYear);
+  const hasNext = isAll ? false : years.some(y => y > curYear);
   const prev = document.getElementById('ybPrev');
   const next = document.getElementById('ybNext');
   if (prev) prev.style.opacity = hasPrev ? '1' : '0.2';
   if (next) next.style.opacity = hasNext ? '1' : '0.2';
 
-  // Update stats for selected year
-  const entries = getEntries();
-  const yearEntries = entries.filter(e => {
-    const d = new Date(e.dateEnd || e.dateStart);
-    return d.getFullYear() === curYear && e.status === 'done';
+  const yearEntries = getEntries().filter(e => {
+    if (e.status !== 'done') return false;
+    if (isAll) return true;
+    return new Date(e.dateEnd || e.dateStart).getFullYear() === curYear;
   });
   const fire = yearEntries.filter(e=>e.fire).length;
   let totalMin = 0;
@@ -304,15 +311,17 @@ function updateYearBanner() {
 }
 
 function switchVibeYear(dir) {
-  const vibes = window._cache?.vibes || [];
-  if (!vibes.length) return;
-  const years = vibes.map(v=>v.year).sort((a,b)=>a-b);
-  const curYear = window._currentVibeYear || new Date().getFullYear();
-  const curIdx = years.indexOf(curYear);
-  const newIdx = curIdx + dir;
-  if (newIdx < 0 || newIdx >= years.length) return;
-  window._currentVibeYear = years[newIdx];
-  updateYearBanner();
+  const years = navYears();
+  const cur = window._currentVibeYear;
+  let target;
+  if (cur === 'all') {
+    if (dir < 0) target = years[years.length-1]; else return;
+  } else {
+    const ni = years.indexOf(cur) + dir;
+    if (ni < 0 || ni >= years.length) return;
+    target = years[ni];
+  }
+  setYearFilter(String(target));
 }
 
 
@@ -654,21 +663,15 @@ async function confirmDelete() {
 // ===== YEAR FILTER =====
 function setYearFilter(val) {
   _yearFilter = val;
+  window._currentVibeYear = val === 'all' ? 'all' : parseInt(val);
   render();
 }
-
 function refreshYearFilter() {
   const sel = document.getElementById('yearFilter');
   if (!sel) return;
-  const years = [...new Set(
-    getEntries()
-      .map(e => (e.dateEnd || e.dateStart || '').substring(0, 4))
-      .filter(y => y && y.length === 4)
-  )].sort().reverse();
-
-  const cur = sel.value;
-  sel.innerHTML = '<option value="all">Всі роки</option>' +
-    years.map(y => `<option value="${y}"${cur===y?' selected':''}>${y}</option>`).join('');
+  const years = navYears().reverse();
+  sel.innerHTML = `<option value="all"${_yearFilter==='all'?' selected':''}>Весь час</option>` +
+    years.map(y => `<option value="${y}"${_yearFilter===String(y)?' selected':''}>${y}</option>`).join('');
 }
 
 // ===== EXPORT =====

@@ -19,7 +19,8 @@ function initApp() {
   const curYear = new Date().getFullYear();
   const vibes = window._cache?.vibes || [];
   const hasCurrentYear = vibes.some(v => v.year === curYear);
-  window._currentVibeYear = hasCurrentYear ? curYear : (vibes[0]?.year || curYear);
+  window._currentVibeYear = curYear;
+  _yearFilter = String(curYear);
 
   gotoPage('list', document.querySelector('.nav-item'));
   // Force update banner after data is ready
