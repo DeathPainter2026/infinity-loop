@@ -360,23 +360,23 @@ body.theme-halloween .year-banner::after {
    THEME: НОВИЙ РІК 🎄
 ══════════════════════════════════════════ */
 body.theme-newyear {
-  --bg:#040a1a; --bg1:#08112a; --bg2:#0c1838; --bg3:#112046; --bg4:#162a58;
-  --sidebar-bg:rgba(4,10,26,0.96); --topbar-bg:rgba(4,10,26,0.9);
-  --banner-bg:linear-gradient(135deg,rgba(232,196,90,0.16) 0%,rgba(40,90,200,0.22) 100%);
-  --banner-border:rgba(232,196,90,0.3);
-  --border:#1a2a58; --border2:#233670; --border-rgb:26,42,88;
-  --text:#e8f0ff; --muted:#7a90c0; --muted2:#a8bce8;
-  --accent:#e8c45a; --accent-light:#f3dc8a; --accent-rgb:232,196,90;
-  --accent-glow:rgba(232,196,90,0.45); --accent-bg:rgba(232,196,90,0.09); --accent-border:rgba(232,196,90,0.35);
-  --nav-hover:rgba(232,196,90,0.07); --nav-active:rgba(232,196,90,0.14); --row-hover:rgba(232,196,90,0.04);
-  --c-done:#3ddc97; --c-now:#5ab0ff; --c-plan:#c9a0ff; --c-drop:#ff6b6b;
-  --c-done-rgb:61,220,151; --c-now-rgb:90,176,255; --c-plan-rgb:201,160,255; --c-drop-rgb:255,107,107;
-  --danger:#e53935; --btn-text:#1a1400;
-  --bg1-rgb:8,17,42; --bg2-rgb:12,24,56;
+  --bg:#120606; --bg1:#1a0a0a; --bg2:#240e0e; --bg3:#2f1414; --bg4:#3b1a1a;
+  --sidebar-bg:rgba(18,6,6,0.94); --topbar-bg:rgba(18,6,6,0.82);
+  --banner-bg:linear-gradient(135deg,rgba(214,40,40,0.35) 0%,rgba(20,120,60,0.3) 100%);
+  --banner-border:rgba(255,200,61,0.45);
+  --border:#4a2020; --border2:#6a2c2c; --border-rgb:74,32,32;
+  --text:#fff4e0; --muted:#c9a080; --muted2:#e8c8a0;
+  --accent:#ffc83d; --accent-light:#ffe08a; --accent-rgb:255,200,61;
+  --accent-glow:rgba(255,200,61,0.55); --accent-bg:rgba(255,200,61,0.12); --accent-border:rgba(255,200,61,0.45);
+  --nav-hover:rgba(255,200,61,0.09); --nav-active:rgba(255,200,61,0.18); --row-hover:rgba(255,200,61,0.06);
+  --c-done:#3ddc7a; --c-now:#5ab0ff; --c-plan:#ffd54f; --c-drop:#ff6b6b;
+  --c-done-rgb:61,220,122; --c-now-rgb:90,176,255; --c-plan-rgb:255,213,79; --c-drop-rgb:255,107,107;
+  --danger:#e53935; --btn-text:#2a1400;
+  --bg1-rgb:26,10,10; --bg2-rgb:36,14,14;
   --theme-font: 'Cinzel', serif;
   --theme-bg-image: url('../img/bg-newyear.jpg');
-  --theme-bg-opacity: 0.9;
-  --theme-overlay: linear-gradient(135deg, rgba(10,6,6,0.62) 0%, rgba(10,6,6,0.5) 100%);
+  --theme-bg-opacity: 1;
+  --theme-overlay: linear-gradient(135deg, rgba(14,4,4,0.3) 0%, rgba(14,4,4,0.18) 100%);
 }
 body.theme-newyear .logo-name,
 body.theme-newyear .tb-title,
@@ -384,8 +384,8 @@ body.theme-newyear .yb-title,
 body.theme-newyear .modal-ttl { font-family: 'Cinzel', serif; letter-spacing:1px; }
 body.theme-newyear .year-banner { position:relative; overflow:hidden; }
 body.theme-newyear .year-banner::after {
-  content:'🎄 ❄️ ✨'; position:absolute; right:20px; top:50%; transform:translateY(-50%);
-  font-size:26px; letter-spacing:10px; opacity:0.18; pointer-events:none; white-space:nowrap;
+  content:'🎄 ❄️ ✨ 🎁'; position:absolute; right:20px; top:50%; transform:translateY(-50%);
+  font-size:28px; letter-spacing:10px; opacity:0.5; pointer-events:none; white-space:nowrap;
 }
 
 body.theme-cthulhu.light-mode,
