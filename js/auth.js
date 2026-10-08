@@ -63,7 +63,7 @@ function isAdmin() {
 
 // ─── THEME ───
 function applyTheme(name) {
-  const themes = ['cthulhu','classic','cyberpunk','horror','anime','samurai','anime2'];
+  const themes = ['cthulhu','classic','cyberpunk','horror','anime','samurai','anime2','halloween','newyear'];
   themes.forEach(t => document.body.classList.remove('theme-' + t));
   document.body.classList.add('theme-' + name);
   localStorage.setItem('il_theme', name);
