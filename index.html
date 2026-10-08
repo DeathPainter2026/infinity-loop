@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&family=JetBrains+Mono:wght@400;500&family=Raleway:wght@300;400;500;600&family=Orbitron:wght@400;600;700&family=Share+Tech+Mono&family=M+PLUS+Rounded+1c:wght@400;700&family=Shippori+Mincho:wght@400;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/main.css?v=3">
-<link rel="stylesheet" href="css/themes.css?v=3">
+<link rel="stylesheet" href="css/themes.css?v=4">
 
 
 
@@ -102,6 +102,8 @@
       <button class="tp-btn" onclick="setThemeLogin('anime',this)" title="Аніме">🌸</button>
       <button class="tp-btn" onclick="setThemeLogin('samurai',this)" title="Самурай">⚔️</button>
       <button class="tp-btn" onclick="setThemeLogin('anime2',this)" title="Аніме 2">🔥</button>
+      <button class="tp-btn" onclick="setThemeLogin('halloween',this)" title="Гелловін">🎃</button>
+      <button class="tp-btn" onclick="setThemeLogin('newyear',this)" title="Новий рік">🎄</button>
     </div>
   </div>
 </div>
@@ -158,6 +160,8 @@
           <option value="anime">🌸 Аніме</option>
           <option value="samurai">⚔️ Самурай</option>
           <option value="anime2">🔥 Аніме 2</option>
+          <option value="halloween">🎃 Гелловін</option>
+          <option value="newyear">🎄 Новий рік</option>
         </select>
         </div>
       <div class="user-row">
@@ -547,7 +551,7 @@ function mobileNavTheme() {
     const cur = localStorage.getItem('il_theme') || 'cthulhu';
     const themes = [
       ['cthulhu','🐙 Ктулху'],['classic','🚀 Фантастика'],['cyberpunk','⚡ Кіберпанк'],
-      ['horror','💀 Жахи'],['anime','🌸 Аніме'],['samurai','⚔️ Самурай'],['anime2','🔥 Аніме 2']
+      ['horror','💀 Жахи'],['anime','🌸 Аніме'],['samurai','⚔️ Самурай'],['anime2','🔥 Аніме 2'],['halloween','🎃 Гелловін'],['newyear','🎄 Новий рік']
     ];
     const sheet = document.createElement('div');
     sheet.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:var(--bg1);border-top:1px solid var(--border);border-radius:16px 16px 0 0;padding:16px;z-index:9999;';
