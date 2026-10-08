@@ -115,7 +115,10 @@
       <span>📋</span>Список
     </button>
     <button class="mobile-nav-item" id="mnAnalytics" onclick="mobileNav('analytics',this)">
-      <span>📊</span>Аналітика
+      <span>📊</span>Статистика
+    </button>
+    <button class="mobile-nav-item" id="mnCompare" onclick="mobileNav('compare',this)">
+      <span>⇄</span>Роки
     </button>
     <button class="mobile-nav-item mobile-only" onclick="mobileNavTheme()">
       <span>🎨</span>Тема
@@ -138,12 +141,11 @@
       <div class="nav-section">
         <div class="nav-sec-label">Навігація</div>
         <a class="nav-item active" onclick="gotoPage('list',this)" title="Мій список"><span class="ni-icon">◈</span><span class="nav-label"> Мій список</span> <span class="ni-badge" id="badgeTotal">0</span></a>
-        <a class="nav-item" onclick="gotoPage('analytics',this)" title="Аналітика"><span class="ni-icon">◉</span><span class="nav-label"> Аналітика</span></a>
+        <a class="nav-item" onclick="gotoPage('analytics',this)" title="Статистика"><span class="ni-icon">◉</span><span class="nav-label"> Статистика</span></a>
+        <a class="nav-item" onclick="gotoPage('compare',this)" title="Порівняння років"><span class="ni-icon">⇄</span><span class="nav-label"> Порівняння років</span></a>
       </div>
       <div class="nav-section">
         <div class="nav-sec-label">Статус</div>
-        <a class="nav-item" onclick="sidebarFilter('status','done',this)" title="Переглянуто"><span class="orb orb-done"></span><span class="nav-label"> ✅ Переглянуто</span> <span class="ni-badge" id="bDone">0</span></a>
-        <a class="nav-item" onclick="sidebarFilter('status','now',this)" title="Дивлюся зараз"><span class="orb orb-now"></span><span class="nav-label"> 👁️ Дивлюся зараз</span> <span class="ni-badge" id="bNow">0</span></a>
         <a class="nav-item" onclick="sidebarFilter('status','plan',this)" title="Хочу подивитись"><span class="orb orb-plan"></span><span class="nav-label"> 📌 Хочу подивитись</span> <span class="ni-badge" id="bPlan">0</span></a>
         <a class="nav-item" onclick="sidebarFilter('status','drop',this)" title="Кинув"><span class="orb orb-drop"></span><span class="nav-label"> ❌ Кинув</span> <span class="ni-badge" id="bDrop">0</span></a>
       </div>
@@ -280,6 +282,9 @@
 
       <div id="analyticsPage" style="display:none">
         <div id="anContent"></div>
+      </div>
+      <div id="comparePage" style="display:none">
+        <div id="cmpContent"></div>
       </div>
     </div>
   </main>
@@ -468,9 +473,9 @@ function initSupabase() {
 </script>
 <script src="js/db.js?v=3"></script>
 <script src="js/data.js?v=3"></script>
-<script src="js/auth.js?v=3"></script>
-<script src="js/ui.js?v=3"></script>
-<script src="js/analytics.js?v=3"></script>
+<script src="js/auth.js?v=4"></script>
+<script src="js/ui.js?v=4"></script>
+<script src="js/analytics.js?v=4"></script>
 <script src="js/app.js?v=3"></script>
 <script>
 if ('serviceWorker' in navigator) {
