@@ -324,13 +324,79 @@ body.theme-anime2 .topbar::before {
 /* ══════════════════════════════════════════
    LIGHT MODE (last — highest specificity)
 ══════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   THEME: HALLOWEEN 🎃
+══════════════════════════════════════════ */
+body.theme-halloween {
+  --bg:#0c0612; --bg1:#120a1c; --bg2:#1a0f28; --bg3:#221434; --bg4:#2b1a40;
+  --sidebar-bg:rgba(12,6,18,0.96); --topbar-bg:rgba(12,6,18,0.9);
+  --banner-bg:linear-gradient(135deg,rgba(255,122,26,0.18) 0%,rgba(90,30,120,0.25) 100%);
+  --banner-border:rgba(255,122,26,0.3);
+  --border:#2e1a44; --border2:#3d2358; --border-rgb:46,26,68;
+  --text:#f5e6d8; --muted:#9a7aa8; --muted2:#c4a0d0;
+  --accent:#ff7a1a; --accent-light:#ffa24d; --accent-rgb:255,122,26;
+  --accent-glow:rgba(255,122,26,0.45); --accent-bg:rgba(255,122,26,0.09); --accent-border:rgba(255,122,26,0.35);
+  --nav-hover:rgba(255,122,26,0.07); --nav-active:rgba(255,122,26,0.14); --row-hover:rgba(255,122,26,0.04);
+  --c-done:#ff9a3c; --c-now:#b36bff; --c-plan:#8bc34a; --c-drop:#7a6a8a;
+  --c-done-rgb:255,154,60; --c-now-rgb:179,107,255; --c-plan-rgb:139,195,74; --c-drop-rgb:122,106,138;
+  --danger:#d32f2f; --btn-text:#1a0a00;
+  --bg1-rgb:18,10,28; --bg2-rgb:26,15,40;
+  --theme-font: 'IM Fell English', serif;
+  --theme-bg-image: url('../img/bg-halloween.jpg');
+  --theme-bg-opacity: 0.9;
+  --theme-overlay: linear-gradient(135deg, rgba(12,6,18,0.5) 0%, rgba(12,6,18,0.35) 100%);
+}
+body.theme-halloween .logo-name,
+body.theme-halloween .tb-title,
+body.theme-halloween .yb-title,
+body.theme-halloween .modal-ttl { font-family: 'IM Fell English', serif; letter-spacing:1px; }
+body.theme-halloween .year-banner { position:relative; overflow:hidden; }
+body.theme-halloween .year-banner::after {
+  content:'🎃 🦇 🕸️'; position:absolute; right:20px; top:50%; transform:translateY(-50%);
+  font-size:26px; letter-spacing:10px; opacity:0.18; pointer-events:none; white-space:nowrap;
+}
+
+/* ══════════════════════════════════════════
+   THEME: НОВИЙ РІК 🎄
+══════════════════════════════════════════ */
+body.theme-newyear {
+  --bg:#040a1a; --bg1:#08112a; --bg2:#0c1838; --bg3:#112046; --bg4:#162a58;
+  --sidebar-bg:rgba(4,10,26,0.96); --topbar-bg:rgba(4,10,26,0.9);
+  --banner-bg:linear-gradient(135deg,rgba(232,196,90,0.16) 0%,rgba(40,90,200,0.22) 100%);
+  --banner-border:rgba(232,196,90,0.3);
+  --border:#1a2a58; --border2:#233670; --border-rgb:26,42,88;
+  --text:#e8f0ff; --muted:#7a90c0; --muted2:#a8bce8;
+  --accent:#e8c45a; --accent-light:#f3dc8a; --accent-rgb:232,196,90;
+  --accent-glow:rgba(232,196,90,0.45); --accent-bg:rgba(232,196,90,0.09); --accent-border:rgba(232,196,90,0.35);
+  --nav-hover:rgba(232,196,90,0.07); --nav-active:rgba(232,196,90,0.14); --row-hover:rgba(232,196,90,0.04);
+  --c-done:#3ddc97; --c-now:#5ab0ff; --c-plan:#c9a0ff; --c-drop:#ff6b6b;
+  --c-done-rgb:61,220,151; --c-now-rgb:90,176,255; --c-plan-rgb:201,160,255; --c-drop-rgb:255,107,107;
+  --danger:#e53935; --btn-text:#1a1400;
+  --bg1-rgb:8,17,42; --bg2-rgb:12,24,56;
+  --theme-font: 'Cinzel', serif;
+  --theme-bg-image: url('../img/bg-newyear.jpg');
+  --theme-bg-opacity: 0.9;
+  --theme-overlay: linear-gradient(135deg, rgba(10,6,6,0.62) 0%, rgba(10,6,6,0.5) 100%);
+}
+body.theme-newyear .logo-name,
+body.theme-newyear .tb-title,
+body.theme-newyear .yb-title,
+body.theme-newyear .modal-ttl { font-family: 'Cinzel', serif; letter-spacing:1px; }
+body.theme-newyear .year-banner { position:relative; overflow:hidden; }
+body.theme-newyear .year-banner::after {
+  content:'🎄 ❄️ ✨'; position:absolute; right:20px; top:50%; transform:translateY(-50%);
+  font-size:26px; letter-spacing:10px; opacity:0.18; pointer-events:none; white-space:nowrap;
+}
+
 body.theme-cthulhu.light-mode,
 body.theme-classic.light-mode,
 body.theme-cyberpunk.light-mode,
 body.theme-horror.light-mode,
 body.theme-anime.light-mode,
 body.theme-samurai.light-mode,
-body.theme-anime2.light-mode {
+body.theme-anime2.light-mode,
+body.theme-halloween.light-mode,
+body.theme-newyear.light-mode {
   --bg:#f0ede6; --bg1:#ffffff; --bg2:#f5f2eb; --bg3:#ebe7de; --bg4:#e0dbd0;
   --border:#d5cfc3; --border2:#c8c0b0; --border-rgb:213,207,195;
   --text:#1a1510; --muted:#9a8f7a; --muted2:#5a4f3a;
