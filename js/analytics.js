@@ -210,10 +210,16 @@ function cardRatingDivergence(entries) {
 }
 
 function renderAnalytics() {
-  const allEntries = getEntries();
+  const _inYear = e => { if (_anYear==='all') return true; const d=new Date(e.dateEnd||e.dateStart); return !isNaN(d) && d.getFullYear()===_anYear; };
+  const allEntries = getEntries().filter(_inYear);
   const entries = allEntries.filter(e=>e.status==='done');
   const done = entries;
+  if (!entries.length) {
+    document.getElementById('anContent').innerHTML = anYearBar() + '<div class="an-card" style="text-align:center;padding:40px;color:var(--muted2)">У цьому році ще немає переглянутого 🎬</div>';
+    return;
+  }
   document.getElementById('anContent').innerHTML = `
+    ${anYearBar()}
     ${cardQuickFacts(allEntries)}
     <div class="an-grid" style="margin-top:16px">
       ${cardDonutCount(entries)}
@@ -424,8 +430,9 @@ function cardComparison(done) {
 function cardHoursLineChart(entries) {
   const mLabels=['Січ','Лют','Бер','Кві','Тра','Чер','Лип','Сер','Вер','Жов','Лис','Гру'];
   const now = new Date();
-  const curM = now.getMonth();
-  const curY = now.getFullYear();
+  const _sy = (typeof _anYear==='number') ? _anYear : now.getFullYear();
+  const curM = _sy===now.getFullYear() ? now.getMonth() : 11;
+  const curY = _sy;
 
   const monthlyMins = getMonthlyHours(entries);
   const mHours = Array(12).fill(0);
@@ -497,8 +504,9 @@ function cardMonthlyByType(entries) {
   const mLabels=['Січ','Лют','Бер','Кві','Тра','Чер','Лип','Сер','Вер','Жов','Лис','Гру'];
   const tc=typeConfig();
   const now=new Date();
-  const curM=now.getMonth();
-  const curY=now.getFullYear();
+  const _sy = (typeof _anYear==='number') ? _anYear : now.getFullYear();
+  const curM = _sy===now.getFullYear() ? now.getMonth() : 11;
+  const curY = _sy;
 
   const mData=Array(12).fill(null).map(()=>({}));
   entries.forEach(e=>{
@@ -671,4 +679,108 @@ function cardByReleaseYear(entries) {
     ${funFacts}
     <div style="max-height:320px;overflow-y:auto">${rows}</div>
   </div>`;
+}
+
+
+// ===== YEAR SWITCHER (Статистика) =====
+let _anYear = new Date().getFullYear();
+
+function entryYear(e) {
+  const d = new Date(e.dateEnd || e.dateStart);
+  return isNaN(d) ? null : d.getFullYear();
+}
+function anYears() {
+  const set = new Set([new Date().getFullYear()]);
+  getEntries().filter(e => e.status === 'done').forEach(e => { const y = entryYear(e); if (y) set.add(y); });
+  return [...set].sort((x, y) => y - x);
+}
+function setAnYear(v) {
+  _anYear = (v === 'all') ? 'all' : parseInt(v);
+  renderAnalytics();
+}
+function anYearBar() {
+  return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+    ${anYears().map(y => `<button class="gf${_anYear === y ? ' active' : ''}" onclick="setAnYear(${y})">${y}</button>`).join('')}
+    <button class="gf${_anYear === 'all' ? ' active' : ''}" onclick="setAnYear('all')">Весь час</button>
+  </div>`;
+}
+
+// ===== COMPARE YEARS (Порівняння років) =====
+let _cmpA = new Date().getFullYear();
+let _cmpB = new Date().getFullYear() - 1;
+const MONTHS_SHORT = ['Січ','Лют','Бер','Кві','Тра','Чер','Лип','Сер','Вер','Жов','Лис','Гру'];
+
+function yearStats(y) {
+  const list = getEntries().filter(e => e.status === 'done' && entryYear(e) === y);
+  const rated = list.filter(e => e.rating).map(e => parseInt(e.rating));
+  const hrs = Array(12).fill(0), cnt = Array(12).fill(0), types = {};
+  Object.entries(getMonthlyHours(list)).forEach(([k, mins]) => {
+    const [yy, mm] = k.split('-').map(Number);
+    if (yy === y && mm >= 1 && mm <= 12) hrs[mm - 1] += mins / 60;
+  });
+  list.forEach(e => {
+    cnt[new Date(e.dateEnd || e.dateStart).getMonth()]++;
+    types[e.type] = (types[e.type] || 0) + 1;
+  });
+  const maxC = Math.max(...cnt);
+  return {
+    count: list.length,
+    hours: hrs.reduce((a, b) => a + b, 0),
+    avg: rated.length ? rated.reduce((a, b) => a + b, 0) / rated.length : 0,
+    fire: list.filter(e => e.fire).length,
+    top: maxC > 0 ? ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'][cnt.indexOf(maxC)] : '—',
+    hrs, types
+  };
+}
+function setCmp(which, v) {
+  if (which === 'A') _cmpA = parseInt(v); else _cmpB = parseInt(v);
+  renderCompare();
+}
+function cmpDelta(a, b, dec) {
+  const d = a - b;
+  const col = d > 0 ? 'var(--c-done)' : d < 0 ? 'var(--c-drop)' : 'var(--muted2)';
+  const txt = (d > 0 ? '+' : '') + (dec ? d.toFixed(dec) : d);
+  return `<span style="color:${col};font-weight:700">${txt}</span>`;
+}
+function renderCompare() {
+  const el = document.getElementById('cmpContent');
+  if (!el) return;
+  const years = anYears();
+  [_cmpA, _cmpB].forEach(y => { if (!years.includes(y)) years.push(y); });
+  years.sort((x, y) => y - x);
+  const sel = (which, cur) => `<select onchange="setCmp('${which}',this.value)" style="background:var(--bg2);color:var(--text);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;font-size:14px;font-weight:700">
+    ${years.map(y => `<option value="${y}"${y === cur ? ' selected' : ''}>${y}</option>`).join('')}</select>`;
+  const A = yearStats(_cmpA), B = yearStats(_cmpB);
+  const row = (lbl, va, vb, delta) => `<div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 0.8fr;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);align-items:center">
+    <div style="color:var(--muted2);font-size:13px">${lbl}</div>
+    <div style="font-weight:700;color:var(--accent)">${va}</div>
+    <div style="font-weight:700">${vb}</div>
+    <div style="text-align:right">${delta}</div></div>`;
+  const types = typeConfig().filter(t => A.types[t.key] || B.types[t.key]);
+  const maxH = Math.max(...A.hrs, ...B.hrs, 1);
+  const bars = MONTHS_SHORT.map((m, i) => `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+    <div style="display:flex;align-items:flex-end;gap:2px;height:110px">
+      <div title="${_cmpA}: ${A.hrs[i].toFixed(1)}г" style="width:9px;height:${(A.hrs[i] / maxH * 100).toFixed(0)}px;background:var(--accent);border-radius:3px 3px 0 0"></div>
+      <div title="${_cmpB}: ${B.hrs[i].toFixed(1)}г" style="width:9px;height:${(B.hrs[i] / maxH * 100).toFixed(0)}px;background:var(--muted2);opacity:.7;border-radius:3px 3px 0 0"></div>
+    </div><div style="font-size:10px;color:var(--muted2)">${m}</div></div>`).join('');
+  el.innerHTML = `
+    <div class="an-card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        ${sel('A', _cmpA)} <span style="color:var(--muted2)">проти</span> ${sel('B', _cmpB)}
+      </div>
+      <div style="margin-top:14px">
+        ${row('', `<b>${_cmpA}</b>`, `<b>${_cmpB}</b>`, 'різниця')}
+        ${row('✅ Переглянуто', A.count, B.count, cmpDelta(A.count, B.count))}
+        ${row('⏱️ Годин', A.hours.toFixed(1), B.hours.toFixed(1), cmpDelta(A.hours, B.hours, 1))}
+        ${row('⭐ Середня оцінка', A.avg ? A.avg.toFixed(1) : '—', B.avg ? B.avg.toFixed(1) : '—', cmpDelta(A.avg, B.avg, 1))}
+        ${row('🔥 Шедеврів', A.fire, B.fire, cmpDelta(A.fire, B.fire))}
+        ${row('📅 Топ місяць', A.top, B.top, '')}
+        ${types.map(t => row(t.label, A.types[t.key] || 0, B.types[t.key] || 0, cmpDelta(A.types[t.key] || 0, B.types[t.key] || 0))).join('')}
+      </div>
+    </div>
+    <div class="an-card">
+      <div class="an-ttl"><span>📈</span> Години по місяцях
+        <span style="margin-left:auto;font-size:11px;font-weight:600"><span style="color:var(--accent)">■ ${_cmpA}</span> &nbsp; <span style="color:var(--muted2)">■ ${_cmpB}</span></span></div>
+      <div style="display:flex;gap:4px;padding-top:8px">${bars}</div>
+    </div>`;
 }

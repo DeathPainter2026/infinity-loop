@@ -117,7 +117,7 @@ function renderTable() {
       : '<span class="td-mono" style="color:var(--muted)">—</span>';
 
     return `<div class="t-row" onclick="${admin?`openEditModal(${e.id})`:''}">
-      <div class="td td-num" data-col="num" style="width:${_cols.num}px;min-width:${_cols.num}px;max-width:${_cols.num}px">${data.length-i}</div>
+      <div class="td td-num" data-col="num" style="width:${_cols.num}px;min-width:${_cols.num}px;max-width:${_cols.num}px">${i+1}</div>
       <div class="td" data-col="name" style="width:${_cols.name}px;min-width:${_cols.name}px;max-width:${_cols.name}px"><div class="td-name-cell"><div class="td-name-main">${e.name}${e.private&&isAdmin()?' 🔒':''}</div></div></div>
       <div class="td" data-col="type" style="width:${_cols.type}px;min-width:${_cols.type}px;max-width:${_cols.type}px"><span class="type-pill ${tc}">${ti} ${tn}</span></div>
       <div class="td td-mono" data-col="year" style="width:${_cols.year}px;min-width:${_cols.year}px;max-width:${_cols.year}px">${e.year||'—'}</div>
@@ -186,16 +186,24 @@ function setView(v) {
 }
 
 // ===== NAVIGATION =====
-function gotoPage(page, el) {
-  const isList = page==='list';
+function gotoPage(page, el, keepFilter) {
+  const isList = page==='list', isCmp = page==='compare', isStats = page==='analytics';
   document.getElementById('listPage').style.display = isList?'':'none';
-  document.getElementById('analyticsPage').style.display = isList?'none':'';
+  document.getElementById('analyticsPage').style.display = isStats?'':'none';
+  const cp = document.getElementById('comparePage');
+  if (cp) cp.style.display = isCmp?'':'none';
   document.getElementById('yearBanner').style.display = isList?'':'none';
   document.getElementById('kpiRow').style.display = isList?'':'none';
-  document.getElementById('tbTitle').textContent = isList?'Мій список':'Аналітика';
+  document.getElementById('tbTitle').textContent = isList?'Мій список':(isCmp?'Порівняння років':'Статистика');
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   if (el) el.classList.add('active');
-  if (!isList) renderAnalytics();
+  // "Мій список" = повний список: скидаємо статус-фільтр і вкладку типу
+  if (isList && !keepFilter) {
+    _sidebarFilter = null; _typeTab = 'all';
+    document.querySelectorAll('.tt').forEach((b,i)=>b.classList.toggle('active', i===0));
+  }
+  if (isStats) renderAnalytics();
+  else if (isCmp) renderCompare();
   else render();
 }
 
@@ -221,7 +229,7 @@ function sidebarFilter(key,val,el) {
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.tt').forEach(b=>b.classList.remove('active'));
-  gotoPage('list',null);
+  gotoPage('list',null,true);
 }
 function refreshGenreFilters() {
   const c = document.getElementById('genreFilters');
@@ -240,8 +248,6 @@ function refreshGenreFilters() {
 function updateBadges() {
   const e = getEntries();
   document.getElementById('badgeTotal').textContent = e.length;
-  document.getElementById('bDone').textContent   = e.filter(x=>x.status==='done').length;
-  document.getElementById('bNow').textContent    = e.filter(x=>x.status==='now').length;
   document.getElementById('bPlan').textContent   = e.filter(x=>x.status==='plan').length;
   document.getElementById('bDrop').textContent   = e.filter(x=>x.status==='drop').length;
   // type badges removed from sidebar
@@ -251,14 +257,9 @@ function updateBadges() {
 function updateKPI() {
   const e = getEntries();
   const st = calcStats(e);
-  // Use getMonthlyHours for accurate time (accounts for monthHours field)
-  const done = e.filter(x => x.status === 'done');
-  const mh = getMonthlyHours(done);
-  const totalMin = Object.values(mh).reduce((a,b) => a+b, 0);
-  const h = Math.floor(totalMin/60), m = totalMin%60;
   document.getElementById('kTotal').textContent = st.total;
-  document.getElementById('kHours').textContent = `${h}:${String(m).padStart(2,'0')}`;
-  document.getElementById('kDays').textContent  = `≈ ${(totalMin/60/24).toFixed(1)} днів`;
+  document.getElementById('kHours').textContent = st.hoursStr;
+  document.getElementById('kDays').textContent  = `≈ ${st.daysStr} днів`;
   document.getElementById('kAvg').textContent   = st.avg;
   document.getElementById('kFire').textContent  = st.fire;
   document.getElementById('kPlan').textContent  = st.plan;
@@ -293,9 +294,8 @@ function updateYearBanner() {
     return d.getFullYear() === curYear && e.status === 'done';
   });
   const fire = yearEntries.filter(e=>e.fire).length;
-  // Use getMonthlyHours for accurate time (handles monthHours field)
-  const mh = getMonthlyHours(yearEntries);
-  const totalMin = Object.values(mh).reduce((a,b)=>a+b,0);
+  let totalMin = 0;
+  yearEntries.forEach(e => { totalMin += parseDurationMinutes(e.dur||''); });
   const h = Math.floor(totalMin/60), m2 = totalMin%60;
   const hoursStr = totalMin ? `${h}:${String(m2).padStart(2,'0')}г` : '0г';
   document.getElementById('ybCount').textContent = yearEntries.length;
@@ -317,10 +317,7 @@ function switchVibeYear(dir) {
 
 
 function overlayClick(e,id) { if(e.target.id===id) closeModal(id); }
-function closeModal(id) {
-  document.getElementById(id)?.classList.remove('open');
-  if (id === 'entryModal') window._monthHoursListenersActive = false;
-}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
 
 
@@ -381,11 +378,7 @@ function openAddModal() {
   _selectedGenres=[];
   renderGenreDropdown();
   document.getElementById('entryModal').classList.add('open');
-  setTimeout(() => {
-    document.getElementById('fName').focus();
-    updateMonthHoursFields();
-    setupMonthHoursListeners();
-  }, 100);
+  setTimeout(()=>document.getElementById('fName').focus(),100);
 }
 
 function openEditModal(id) {
@@ -410,12 +403,6 @@ function openEditModal(id) {
   renderGenreDropdown();
   document.getElementById('delBtn').style.display='';
   document.getElementById('entryModal').classList.add('open');
-  // Setup month hours
-  setTimeout(() => {
-    updateMonthHoursFields();
-    if (e.monthHours) setMonthHoursData(e.monthHours);
-    setupMonthHoursListeners();
-  }, 50);
 }
 
 function renderGenreDropdown(filter='') {
@@ -514,7 +501,6 @@ async function saveEntry() {
   const fire = document.getElementById('fFire').checked;
   const type = document.getElementById('fType').value;
   const emojiMap={film:'🎬',serial:'📺','anime-serial':'⛩️','anime-film':'🎌',mult:'🎨','mult-serial':'🎪'};
-  const monthHours = getMonthHoursData();
   const entry = {
     name:      document.getElementById('fName').value.trim(),
     type, status:document.getElementById('fStatus').value,
@@ -528,7 +514,6 @@ async function saveEntry() {
     imdb:      parseFloat(document.getElementById('fImdb').value)||null,
     genres, notes:'',
     emoji: emojiMap[type]||'🎬',
-    monthHours: monthHours || null,
   };
   if (!entry.name) { alert('Введіть назву!'); return; }
   if (id) await updateEntry(parseInt(id), entry); else await addEntry(entry);
@@ -890,13 +875,16 @@ function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
   const mainArea = document.querySelector('.main-area');
   const btn = document.querySelector('.sidebar-toggle');
-  if (!sidebar) return;
-  sidebar.classList.toggle('collapsed', _sidebarCollapsed);
-  if (mainArea) mainArea.classList.toggle('sidebar-collapsed', _sidebarCollapsed);
-  if (btn) btn.textContent = _sidebarCollapsed ? '›' : '‹';
+  if (_sidebarCollapsed) {
+    sidebar.classList.add('collapsed');
+    if (mainArea) mainArea.classList.add('sidebar-collapsed');
+    if (btn) btn.textContent = '›';
+  } else {
+    sidebar.classList.remove('collapsed');
+    if (mainArea) mainArea.classList.remove('sidebar-collapsed');
+    if (btn) btn.textContent = '‹';
+  }
   localStorage.setItem('il_sidebar', _sidebarCollapsed ? '1' : '0');
-  // Force reflow for resizable columns
-  setTimeout(() => window.dispatchEvent(new Event('resize')), 300);
 }
 
 // Restore sidebar state
@@ -908,102 +896,3 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
   }
 });
-
-// ===== MONTH HOURS BREAKDOWN =====
-const MONTH_NAMES = ['Січень','Лютий','Березень','Квітень','Травень','Червень',
-                     'Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
-
-function updateMonthHoursFields() {
-  const wrap = document.getElementById('monthHoursWrap');
-  const list = document.getElementById('monthHoursList');
-  if (!wrap || !list) return;
-
-  const isSerial = ['serial','anime-serial','mult-serial'].includes(
-    document.getElementById('fType')?.value
-  );
-  if (!isSerial) { wrap.style.display = 'none'; return; }
-
-  const startVal = document.getElementById('fDateStart')?.value;
-  const endVal   = document.getElementById('fDateEnd')?.value;
-  if (!startVal || !endVal) { wrap.style.display = 'none'; return; }
-
-  const dStart = new Date(startVal);
-  const dEnd   = new Date(endVal);
-  if (isNaN(dStart) || isNaN(dEnd)) { wrap.style.display = 'none'; return; }
-
-  // Same month - no need for breakdown
-  if (dStart.getFullYear() === dEnd.getFullYear() && dStart.getMonth() === dEnd.getMonth()) {
-    wrap.style.display = 'none';
-    return;
-  }
-
-  // Build list of months in range
-  const months = [];
-  let cur = new Date(dStart.getFullYear(), dStart.getMonth(), 1);
-  const endM = new Date(dEnd.getFullYear(), dEnd.getMonth(), 1);
-  while (cur <= endM) {
-    months.push({ y: cur.getFullYear(), m: cur.getMonth() });
-    cur.setMonth(cur.getMonth() + 1);
-  }
-
-  // Preserve existing values
-  const existing = {};
-  list.querySelectorAll('.mh-row').forEach(row => {
-    const key = row.dataset.key;
-    const h = row.querySelector('.mh-h')?.value || '';
-    const min = row.querySelector('.mh-min')?.value || '';
-    if (h || min) existing[key] = { h, min };
-  });
-
-  list.innerHTML = months.map(({ y, m }) => {
-    const key = `${y}-${m}`;
-    const val = existing[key] || {};
-    return `<div class="mh-row f2" data-key="${key}" style="gap:8px;align-items:center">
-      <div style="font-size:12px;color:var(--text);min-width:110px">${MONTH_NAMES[m]} ${y}</div>
-      <div style="display:flex;gap:4px;align-items:center">
-        <input class="fi mh-h" type="number" min="0" max="999" placeholder="0" value="${val.h||''}" style="width:56px" title="Годин">
-        <span style="color:var(--muted2);font-size:12px">г</span>
-        <input class="fi mh-min" type="number" min="0" max="59" placeholder="0" value="${val.min||''}" style="width:50px" title="Хвилин">
-        <span style="color:var(--muted2);font-size:12px">хв</span>
-      </div>
-    </div>`;
-  }).join('');
-
-  wrap.style.display = '';
-}
-
-function getMonthHoursData() {
-  const result = {};
-  document.querySelectorAll('.mh-row').forEach(row => {
-    const key = row.dataset.key;
-    const h   = parseInt(row.querySelector('.mh-h')?.value  || '0') || 0;
-    const min = parseInt(row.querySelector('.mh-min')?.value || '0') || 0;
-    if (h || min) result[key] = h * 60 + min;
-  });
-  return Object.keys(result).length ? result : null;
-}
-
-function setMonthHoursData(data) {
-  if (!data) return;
-  document.querySelectorAll('.mh-row').forEach(row => {
-    const key = row.dataset.key;
-    if (data[key] !== undefined) {
-      const total = data[key];
-      const h = Math.floor(total / 60);
-      const min = total % 60;
-      const hInp = row.querySelector('.mh-h');
-      const mInp = row.querySelector('.mh-min');
-      if (hInp) hInp.value = h || '';
-      if (mInp) mInp.value = min || '';
-    }
-  });
-}
-
-function setupMonthHoursListeners() {
-  // Use a flag to avoid duplicate listeners
-  if (window._monthHoursListenersActive) return;
-  window._monthHoursListenersActive = true;
-  document.getElementById('fDateStart')?.addEventListener('change', updateMonthHoursFields);
-  document.getElementById('fDateEnd')?.addEventListener('change', updateMonthHoursFields);
-  document.getElementById('fType')?.addEventListener('change', updateMonthHoursFields);
-}
