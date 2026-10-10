@@ -386,6 +386,7 @@ function openAddModal() {
   document.getElementById('delBtn').style.display='none';
   _selectedGenres=[];
   renderGenreDropdown();
+  refreshMonthRows({});
   document.getElementById('entryModal').classList.add('open');
   setTimeout(()=>document.getElementById('fName').focus(),100);
 }
@@ -411,6 +412,7 @@ function openEditModal(id) {
   _selectedGenres=[...(e.genres||[])];
   renderGenreDropdown();
   document.getElementById('delBtn').style.display='';
+  refreshMonthRows(e.monthHours||{});
   document.getElementById('entryModal').classList.add('open');
 }
 
@@ -523,6 +525,7 @@ async function saveEntry() {
     imdb:      parseFloat(document.getElementById('fImdb').value)||null,
     genres, notes:'',
     emoji: emojiMap[type]||'🎬',
+    monthHours: collectMonthHours(),
   };
   if (!entry.name) { alert('Введіть назву!'); return; }
   if (id) await updateEntry(parseInt(id), entry); else await addEntry(entry);
@@ -898,4 +901,89 @@ document.addEventListener('DOMContentLoaded', () => {
       if (sidebar) toggleSidebar();
     }, 100);
   }
+});
+
+
+// ===== ГОДИНИ ПО МІСЯЦЯХ (для серіалів, що йшли кілька місяців) =====
+const MONTH_NAMES_UA = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+
+function mhFmt(min) { return `${Math.floor(min/60)}:${String(min%60).padStart(2,'0')}`; }
+function mhParse(v) {
+  v = (v||'').trim();
+  const m = v.match(/^(\d+):(\d{1,2})$/);
+  if (m) return parseInt(m[1])*60 + parseInt(m[2]);
+  const n = parseFloat(v.replace(',','.'));
+  return isNaN(n) ? 0 : Math.round(n*60);
+}
+function mhMinPerEp() {
+  const t = parseDurationMinutes(document.getElementById('fDur').value);
+  const n = parseInt(document.getElementById('fEpisodes').value) || 0;
+  return (t && n) ? t/n : 0;
+}
+function mhMonths() {
+  const s = document.getElementById('fDateStart').value, e = document.getElementById('fDateEnd').value;
+  if (!s || !e) return [];
+  const a = new Date(s), b = new Date(e);
+  if (isNaN(a) || isNaN(b) || b < a) return [];
+  const out = []; let y = a.getFullYear(), m = a.getMonth();
+  while (y < b.getFullYear() || (y === b.getFullYear() && m <= b.getMonth())) {
+    out.push([y, m]); m++; if (m > 11) { m = 0; y++; }
+  }
+  return out;
+}
+function mhCollect() {
+  const res = {};
+  document.querySelectorAll('#monthHoursList .mh-time').forEach(i => {
+    const mins = mhParse(i.value);
+    if (mins > 0) res[i.dataset.key] = mins;
+  });
+  return res;
+}
+function collectMonthHours() {
+  const wrap = document.getElementById('monthHoursWrap');
+  if (!wrap || wrap.style.display === 'none') return null;
+  const res = mhCollect();
+  return Object.keys(res).length ? res : null;
+}
+function refreshMonthRows(saved) {
+  const wrap = document.getElementById('monthHoursWrap'), list = document.getElementById('monthHoursList');
+  if (!wrap || !list) return;
+  const isSerial = ['serial','anime-serial','mult-serial'].includes(document.getElementById('fType').value);
+  const months = mhMonths();
+  const okStatus = ['done','now','drop'].includes(document.getElementById('fStatus').value);
+  if (!isSerial || !okStatus || months.length < 2) { wrap.style.display = 'none'; list.innerHTML = ''; return; }
+  const cur = saved || mhCollect();
+  const mpe = mhMinPerEp();
+  list.innerHTML = months.map(([y,m]) => {
+    const key = `${y}-${m}`, mins = cur[key] || 0;
+    const eps = (mpe && mins) ? Math.round(mins/mpe) : '';
+    return `<div style="display:grid;grid-template-columns:1fr 80px 90px;gap:8px;align-items:center">
+      <span style="font-size:13px">${MONTH_NAMES_UA[m]} ${y}</span>
+      <input class="fi mh-eps" type="number" min="0" placeholder="серій" value="${eps}" oninput="onMonthEps(this)">
+      <input class="fi mh-time" data-key="${key}" type="text" placeholder="г:хв" value="${mins ? mhFmt(mins) : ''}" oninput="updateMonthSum()">
+    </div>`;
+  }).join('') + '<div id="monthSum" style="font-size:12px;color:var(--muted2);margin-top:4px"></div>';
+  wrap.style.display = '';
+  updateMonthSum();
+}
+function onMonthEps(inp) {
+  const mpe = mhMinPerEp();
+  const t = inp.parentElement.querySelector('.mh-time');
+  if (mpe && t) t.value = inp.value ? mhFmt(Math.round((parseInt(inp.value)||0) * mpe)) : '';
+  updateMonthSum();
+}
+function updateMonthSum() {
+  const el = document.getElementById('monthSum'); if (!el) return;
+  let eps = 0, mins = 0;
+  document.querySelectorAll('#monthHoursList .mh-eps').forEach(i => eps += parseInt(i.value)||0);
+  document.querySelectorAll('#monthHoursList .mh-time').forEach(i => mins += mhParse(i.value));
+  const totE = parseInt(document.getElementById('fEpisodes').value) || 0;
+  const totT = parseDurationMinutes(document.getElementById('fDur').value);
+  el.textContent = `Разом: ${eps}${totE ? ' із ' + totE : ''} серій · ${mhFmt(mins)}${totT ? ' із ' + mhFmt(totT) : ''}`;
+}
+document.addEventListener('DOMContentLoaded', () => {
+  ['fDateStart','fDateEnd','fType','fStatus','fDur','fEpisodes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.addEventListener('change', () => refreshMonthRows()); el.addEventListener('input', () => refreshMonthRows()); }
+  });
 });

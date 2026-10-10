@@ -539,32 +539,11 @@ function cardMonthlyByType(entries) {
       if(!typeHours[mi]) typeHours[mi]={};
       typeHours[mi][e.type]=(typeHours[mi][e.type]||0)+mins/60;
     };
-    // Use manual monthHours if available
-    if(e.monthHours && Object.keys(e.monthHours).length>0){
-      Object.entries(e.monthHours).forEach(([key,mins])=>{
-        const parts=key.split('-').map(Number);
-        const mi=parts[1]; // month index 0-11
-        if(new Date(parts[0],mi,1).getFullYear()===curY) addH(mi,mins);
-      });
-      return;
-    }
-    const totalMin=parseDurationMinutes(e.dur||'');
-    if(!totalMin) return;
-    const isSerial=['serial','anime-serial','mult-serial'].includes(e.type);
-    const endM=dEnd.getMonth();
-    if(!isSerial||dStart.getMonth()===endM){
-      addH(endM,totalMin);
-    } else {
-      const eps=e.episodes||0;
-      if(eps>0){
-        const mPerEp=totalMin/eps;
-        const endMonthStart=new Date(dEnd.getFullYear(),dEnd.getMonth(),1);
-        const daysInEnd=Math.round((dEnd-endMonthStart)/86400000)+1;
-        const endEps=Math.min(eps,daysInEnd*2);
-        addH(endM,Math.round(endEps*mPerEp));
-        addH(dStart.getMonth(),totalMin-Math.round(endEps*mPerEp));
-      } else { addH(endM,totalMin); }
-    }
+    // Same split as getMonthlyHours: manual month hours, otherwise proportional by days
+    Object.entries(getMonthlyHours([e])).forEach(([k,mins])=>{
+      const [yy,mo]=k.split('-').map(Number);
+      if(yy===curY) addH(mo-1,mins);
+    });
   });
 
 
