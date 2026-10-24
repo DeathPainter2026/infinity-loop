@@ -231,6 +231,7 @@ function renderAnalytics() {
     <div style="margin-top:16px">${cardTypesSummary(entries)}</div>
     <div style="margin-top:16px">${cardRatingDivergence(entries)}</div>
     <div style="margin-top:16px">${cardMonthlyByType(getEntries().filter(e=>e.status==='done'))}</div>
+    <div style="margin-top:16px">${cardHeatmap()}</div>
     ${cardByReleaseYear(entries)}`;
 }
 
@@ -431,14 +432,15 @@ function cardHoursLineChart(entries) {
   const mLabels=['Січ','Лют','Бер','Кві','Тра','Чер','Лип','Сер','Вер','Жов','Лис','Гру'];
   const now = new Date();
   const _sy = (typeof _anYear==='number') ? _anYear : now.getFullYear();
-  const curM = _sy===now.getFullYear() ? now.getMonth() : 11;
+  const curM = (_anYear==='all') ? 11 : (_sy===now.getFullYear() ? now.getMonth() : 11);
   const curY = _sy;
+  const _all = (_anYear==='all');
 
   const monthlyMins = getMonthlyHours(entries);
   const mHours = Array(12).fill(0);
   Object.entries(monthlyMins).forEach(([k, mins]) => {
     const [y, m] = k.split('-').map(Number);
-    if (y === curY && m >= 1 && m <= 12) mHours[m-1] += mins / 60;
+    if ((_all || y === curY) && m >= 1 && m <= 12) mHours[m-1] += mins / 60;
   });
 
   // Only show months up to current month (not future)
@@ -480,7 +482,7 @@ function cardHoursLineChart(entries) {
 
   return `<div class="an-card span2" style="overflow:hidden">
     <div class="an-ttl" style="display:flex;align-items:center;justify-content:space-between">
-      <span>📈 Години по місяцях ${curY}</span>
+      <span>📈 Години по місяцях ${_all ? '(весь час)' : curY}</span>
       <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent)">${totalH}г всього</span>
     </div>
     <svg width="100%" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="overflow:visible">
@@ -505,13 +507,14 @@ function cardMonthlyByType(entries) {
   const tc=typeConfig();
   const now=new Date();
   const _sy = (typeof _anYear==='number') ? _anYear : now.getFullYear();
-  const curM = _sy===now.getFullYear() ? now.getMonth() : 11;
+  const curM = (_anYear==='all') ? 11 : (_sy===now.getFullYear() ? now.getMonth() : 11);
   const curY = _sy;
+  const _all = (_anYear==='all');
 
   const mData=Array(12).fill(null).map(()=>({}));
   entries.forEach(e=>{
     const d=new Date(e.dateEnd||e.dateStart);
-    if(isNaN(d)||d.getFullYear()!==curY) return;
+    if(isNaN(d)||(!_all&&d.getFullYear()!==curY)) return;
     const m=d.getMonth();
     mData[m][e.type]=(mData[m][e.type]||0)+1;
   });
@@ -523,7 +526,7 @@ function cardMonthlyByType(entries) {
   const mHours=Array(12).fill(0);
   Object.entries(monthlyMins).forEach(([k,mins])=>{
     const [y,m]=k.split('-').map(Number);
-    if(y===curY&&m>=1&&m<=12) mHours[m-1]+=mins/60;
+    if((_all||y===curY)&&m>=1&&m<=12) mHours[m-1]+=mins/60;
   });
 
   const usedTypes=tc.filter(t=>entries.some(e=>e.type===t.key));
@@ -534,7 +537,7 @@ function cardMonthlyByType(entries) {
     const dEnd=new Date(e.dateEnd||e.dateStart);
     const dStart=new Date(e.dateStart||e.dateEnd);
     if(isNaN(dEnd)) return;
-    if(dEnd.getFullYear()!==curY&&dStart.getFullYear()!==curY) return;
+    if(!_all&&dEnd.getFullYear()!==curY&&dStart.getFullYear()!==curY) return;
     const addH=(mi,mins)=>{
       if(!typeHours[mi]) typeHours[mi]={};
       typeHours[mi][e.type]=(typeHours[mi][e.type]||0)+mins/60;
@@ -542,7 +545,7 @@ function cardMonthlyByType(entries) {
     // Same split as getMonthlyHours: manual month hours, otherwise proportional by days
     Object.entries(getMonthlyHours([e])).forEach(([k,mins])=>{
       const [yy,mo]=k.split('-').map(Number);
-      if(yy===curY) addH(mo-1,mins);
+      if(_all||yy===curY) addH(mo-1,mins);
     });
   });
 
@@ -739,11 +742,8 @@ function renderCompare() {
     <div style="text-align:right">${delta}</div></div>`;
   const types = typeConfig().filter(t => A.types[t.key] || B.types[t.key]);
   const maxH = Math.max(...A.hrs, ...B.hrs, 1);
-  const bars = MONTHS_SHORT.map((m, i) => `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-    <div style="display:flex;align-items:flex-end;gap:2px;height:110px">
-      <div title="${_cmpA}: ${A.hrs[i].toFixed(1)}г" style="width:9px;height:${(A.hrs[i] / maxH * 100).toFixed(0)}px;background:var(--accent);border-radius:3px 3px 0 0"></div>
-      <div title="${_cmpB}: ${B.hrs[i].toFixed(1)}г" style="width:9px;height:${(B.hrs[i] / maxH * 100).toFixed(0)}px;background:var(--muted2);opacity:.7;border-radius:3px 3px 0 0"></div>
-    </div><div style="font-size:10px;color:var(--muted2)">${m}</div></div>`).join('');
+  const bar = (v, color, op) => `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:132px"><div style="font-size:10px;color:var(--muted2);margin-bottom:2px">${v >= 1 ? Math.round(v) : ''}</div><div style="width:14px;height:${(v / maxH * 100).toFixed(0)}px;background:${color};opacity:${op};border-radius:3px 3px 0 0"></div></div>`;
+  const bars = MONTHS_SHORT.map((m, i) => `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="display:flex;align-items:flex-end;gap:3px">${bar(A.hrs[i], 'var(--accent)', 1)}${bar(B.hrs[i], 'var(--muted2)', .7)}</div><div style="font-size:10px;color:var(--muted2)">${m}</div></div>`).join('');
   el.innerHTML = `
     <div class="an-card" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -769,7 +769,43 @@ function renderCompare() {
     </div>
     <div class="an-card">
       <div class="an-ttl"><span>📈</span> Години по місяцях
-        <span style="margin-left:auto;font-size:11px;font-weight:600"><span style="color:var(--accent)">■ ${_cmpA}</span> &nbsp; <span style="color:var(--muted2)">■ ${_cmpB}</span></span></div>
-      <div style="display:flex;gap:4px;padding-top:8px">${bars}</div>
+        <span style="margin-left:auto;font-size:11px;font-weight:600"><span style="color:var(--accent)">■ ${_cmpA} · ${Math.round(A.hours)}г</span> &nbsp; <span style="color:var(--muted2)">■ ${_cmpB} · ${Math.round(B.hours)}г</span></span></div>
+      <div style="display:flex;gap:2px;padding-top:8px;overflow-x:auto">${bars}</div>
     </div>`;
 }
+
+
+// ===== ТЕПЛО-КАРТА (дні перегляду) =====
+function cardHeatmap() {
+  const y = (typeof _anYear === 'number') ? _anYear : new Date().getFullYear();
+  const day = new Map();
+  getEntries().filter(e => e.status === 'done').forEach(e => {
+    const s = new Date(e.dateStart || e.dateEnd), t = new Date(e.dateEnd || e.dateStart);
+    if (isNaN(s) || isNaN(t) || t < s) return;
+    const mins = entryTotalMins(e) || 0;
+    const n = Math.round((t - s) / 86400000) + 1;
+    for (let i = 0; i < n; i++) {
+      const d = new Date(s.getTime() + i * 86400000);
+      if (d.getUTCFullYear() !== y) continue;
+      const k = d.toISOString().slice(0, 10);
+      day.set(k, (day.get(k) || 0) + mins / n);
+    }
+  });
+  const max = Math.max(1, ...day.values());
+  const first = new Date(Date.UTC(y, 0, 1));
+  const off = (first.getUTCDay() + 6) % 7;
+  const days = (Date.UTC(y + 1, 0, 1) - Date.UTC(y, 0, 1)) / 86400000;
+  let cells = '<span></span>'.repeat(off);
+  for (let i = 0; i < days; i++) {
+    const k = new Date(Date.UTC(y, 0, 1 + i)).toISOString().slice(0, 10);
+    const v = day.get(k) || 0;
+    const bg = v ? `rgba(var(--accent-rgb),${(0.2 + 0.8 * Math.pow(v / max, 0.6)).toFixed(2)})` : 'var(--bg3)';
+    cells += `<span title="${k.split('-').reverse().join('.')}${v ? ' · ' + (v / 60).toFixed(1) + ' г' : ''}" style="background:${bg};border-radius:2px"></span>`;
+  }
+  return `<div class="an-card">
+    <div class="an-ttl"><span>🟧</span> Тепло-карта ${y} <span style="margin-left:auto;font-size:11px;font-weight:600">днів з переглядами: ${day.size}</span></div>
+    <div style="overflow-x:auto;padding:8px 0"><div style="display:grid;grid-template-rows:repeat(7,12px);grid-auto-flow:column;grid-auto-columns:12px;gap:3px;width:max-content">${cells}</div></div>
+  </div>`;
+}
+
+// ===== Графік порівняння: підписи годин над стовпчиками =====
