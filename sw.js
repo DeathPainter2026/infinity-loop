@@ -1,5 +1,5 @@
 // ∞ Infinity Loop — Service Worker
-const CACHE = 'il-v11';
+const CACHE = 'il-v12';
 const STATIC = [
   '/',
   '/index.html',
@@ -29,12 +29,19 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Network first for API calls, cache first for static assets
   if (e.request.url.includes('supabase.co')) {
     e.respondWith(fetch(e.request).catch(() => new Response('[]')));
     return;
   }
+  if (e.request.method !== 'GET') return;
+  // Спочатку мережа (завжди свіжа версія), кеш — лише коли немає інтернету
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    fetch(e.request).then(res => {
+      if (res.ok && new URL(e.request.url).origin === location.origin) {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy));
+      }
+      return res;
+    }).catch(() => caches.match(e.request))
   );
 });
