@@ -795,17 +795,88 @@ function cardHeatmap() {
   const first = new Date(Date.UTC(y, 0, 1));
   const off = (first.getUTCDay() + 6) % 7;
   const days = (Date.UTC(y + 1, 0, 1) - Date.UTC(y, 0, 1)) / 86400000;
+  const color = v => v ? `rgba(var(--accent-rgb),${(0.2 + 0.8 * Math.pow(v / max, 0.6)).toFixed(2)})` : 'var(--bg3)';
   let cells = '<span></span>'.repeat(off);
   for (let i = 0; i < days; i++) {
     const k = new Date(Date.UTC(y, 0, 1 + i)).toISOString().slice(0, 10);
     const v = day.get(k) || 0;
-    const bg = v ? `rgba(var(--accent-rgb),${(0.2 + 0.8 * Math.pow(v / max, 0.6)).toFixed(2)})` : 'var(--bg3)';
-    cells += `<span title="${k.split('-').reverse().join('.')}${v ? ' · ' + (v / 60).toFixed(1) + ' г' : ''}" style="background:${bg};border-radius:2px"></span>`;
+    cells += `<span title="${k.split('-').reverse().join('.')}${v ? ' · ' + (v / 60).toFixed(1) + ' г' : ''}" style="background:${color(v)};border-radius:2px"></span>`;
   }
+  const monthLbls = MONTHS_SHORT.map((m, mi) => {
+    const dayOfYear = (Date.UTC(y, mi, 1) - Date.UTC(y, 0, 1)) / 86400000;
+    return `<span style="position:absolute;left:${Math.floor((off + dayOfYear) / 7) * 15}px">${m}</span>`;
+  }).join('');
+  const legend = [0, 0.2, 0.45, 0.7, 1].map(f => `<span style="width:12px;height:12px;border-radius:2px;background:${color(f * max)};display:inline-block"></span>`).join(' ');
   return `<div class="an-card">
     <div class="an-ttl"><span>🟧</span> Тепло-карта ${y} <span style="margin-left:auto;font-size:11px;font-weight:600">днів з переглядами: ${day.size}</span></div>
-    <div style="overflow-x:auto;padding:8px 0"><div style="display:grid;grid-template-rows:repeat(7,12px);grid-auto-flow:column;grid-auto-columns:12px;gap:3px;width:max-content">${cells}</div></div>
+    <div style="overflow-x:auto;padding:8px 0">
+      <div style="display:flex;gap:6px;width:max-content">
+        <div style="display:grid;grid-template-rows:repeat(7,12px);gap:3px;margin-top:18px;font-size:9px;color:var(--muted2);line-height:12px"><span>Пн</span><span></span><span>Ср</span><span></span><span>Пт</span><span></span><span>Нд</span></div>
+        <div>
+          <div style="position:relative;height:16px;font-size:10px;color:var(--muted2)">${monthLbls}</div>
+          <div style="display:grid;grid-template-rows:repeat(7,12px);grid-auto-flow:column;grid-auto-columns:12px;gap:3px">${cells}</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end;font-size:10px;color:var(--muted2)">менше ${legend} більше</div>
   </div>`;
 }
 
 // ===== Графік порівняння: підписи годин над стовпчиками =====
+
+
+// ===== ПІДСУМКИ РОКУ =====
+let _wrapYear = new Date().getFullYear();
+function setWrapYear(y) { _wrapYear = parseInt(y); renderWrapped(); }
+function renderWrapped() {
+  const el = document.getElementById('wrapContent');
+  if (!el) return;
+  const y = _wrapYear, S = yearStats(y), P = yearStats(y - 1);
+  const chips = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${anYears().map(v => `<button class="gf${v === y ? ' active' : ''}" onclick="setWrapYear(${v})">${v}</button>`).join('')}</div>`;
+  const list = getEntries().filter(e => e.status === 'done' && entryYear(e) === y);
+  if (!list.length) { el.innerHTML = chips + `<div class="an-card" style="text-align:center;padding:40px;color:var(--muted2)">У ${y} році ще немає переглянутого 🎬</div>`; return; }
+  const vibe = (window._cache?.vibes || []).find(v => v.year === y);
+  const eps = list.reduce((s, e) => s + (parseInt(e.episodes) || 0), 0);
+  const gc = {}; list.forEach(e => (e.genres || []).forEach(g => gc[g] = (gc[g] || 0) + 1));
+  const topG = Object.entries(gc).sort((p, q) => q[1] - p[1]).slice(0, 6);
+  const topR = list.filter(e => e.rating).sort((p, q) => (Number(!!q.fire) - Number(!!p.fire)) || (parseInt(q.rating) - parseInt(p.rating))).slice(0, 5);
+  const longest = [...list].sort((p, q) => entryTotalMins(q) - entryTotalMins(p))[0];
+  const dated = [...list].sort((p, q) => (p.dateEnd || p.dateStart).localeCompare(q.dateEnd || q.dateStart));
+  const tile = (lbl, val, sub) => `<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px"><div style="font-size:11px;color:var(--muted2);letter-spacing:1px;text-transform:uppercase">${lbl}</div><div style="font-size:28px;font-weight:800;color:var(--accent);margin:4px 0">${val}</div><div style="font-size:11px;color:var(--muted2)">${sub || ''}</div></div>`;
+  const vs = (a, b, d) => b ? `${cmpDelta(a, b, d)} проти ${y - 1}` : '';
+  const gmax = topG.length ? topG[0][1] : 1;
+  const types = typeConfig().filter(t => S.types[t.key]);
+  const hrsTxt = S.hours.toFixed(0) + 'г';
+  el.innerHTML = chips + `
+    <div class="an-card" style="margin-bottom:14px;text-align:center;padding:26px">
+      <div style="font-size:54px;font-weight:900;color:var(--accent)">${y}</div>
+      <div style="font-size:18px">${esc(vibe?.title || 'Мій рік у кіно')}</div>
+      <div style="font-size:12px;color:var(--muted2);margin-top:4px">${esc((vibe?.tags || '').replace(/\*/g, ' · '))}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px">
+      ${tile('Переглянуто', S.count, vs(S.count, P.count))}
+      ${tile('Годин', hrsTxt, `≈ ${(S.hours / 24).toFixed(1)} діб · ` + vs(S.hours, P.hours, 0))}
+      ${tile('Серій', eps, 'у серіалах')}
+      ${tile('Середня оцінка', S.avg ? S.avg.toFixed(1) : '—', vs(S.avg, P.avg, 1))}
+      ${tile('Шедеврів 🔥', S.fire, vs(S.fire, P.fire))}
+      ${tile('Топ місяць', S.top, '')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px">
+      <div class="an-card"><div class="an-ttl"><span>🏆</span> Найкраще року</div>
+        ${topR.map((e, i) => `<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted2);width:18px">${i + 1}</span><span style="flex:1">${esc(e.name)}</span><b style="color:var(--accent)">${e.rating}${e.fire ? '🔥' : ''}</b></div>`).join('') || '<div style="color:var(--muted2);font-size:12px">Оцінок ще немає</div>'}
+      </div>
+      <div class="an-card"><div class="an-ttl"><span>🎭</span> Улюблені жанри</div>
+        ${topG.map(([g, n]) => `<div style="margin:7px 0;font-size:12px"><div style="display:flex;justify-content:space-between"><span>${esc(g)}</span><span style="color:var(--muted2)">${n}</span></div><div style="height:6px;background:var(--bg3);border-radius:3px"><div style="height:6px;width:${(n / gmax * 100).toFixed(0)}%;background:var(--accent);border-radius:3px"></div></div></div>`).join('')}
+      </div>
+      <div class="an-card"><div class="an-ttl"><span>📺</span> За типами</div>
+        ${types.map(t => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${t.label}</span><b>${S.types[t.key]}</b></div>`).join('')}
+      </div>
+      <div class="an-card"><div class="an-ttl"><span>⏱️</span> Цікаві факти</div>
+        <div style="font-size:13px;line-height:1.7">
+          Найдовше: <b>${esc(longest.name)}</b> (${(entryTotalMins(longest) / 60).toFixed(1)} г)<br>
+          Перше: <b>${esc(dated[0].name)}</b> · ${formatDate(dated[0].dateEnd || dated[0].dateStart)}<br>
+          Останнє: <b>${esc(dated[dated.length - 1].name)}</b> · ${formatDate(dated[dated.length - 1].dateEnd || dated[dated.length - 1].dateStart)}
+        </div>
+      </div>
+    </div>`;
+}

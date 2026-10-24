@@ -148,7 +148,7 @@ function renderCards() {
     const rc = getRatingClass(e.rating, e.fire);
     const rLabel = e.fire?(e.rating?`${e.rating}🔥`:'🔥'):(e.rating||'');
     return `<div class="media-card" onclick="${isAdmin()?`openEditModal(${e.id})`:''}">
-      <div class="mc-poster"><span class="mc-type-icon">${{film:'🎬',serial:'📺',"anime-serial":'⛩️',"anime-film":'🎌',mult:'🎨',"mult-serial":'🎪'}[e.type]||'🎬'}</span>${rLabel?`<div class="mc-r-badge ${rc}">${rLabel}</div>`:''}</div>
+      <div class="mc-poster"${e.poster?` style="background:url('${esc(e.poster)}') center/cover no-repeat"`:''}><span class="mc-type-icon"${e.poster?' style="display:none"':''}>${{film:'🎬',serial:'📺',"anime-serial":'⛩️',"anime-film":'🎌',mult:'🎨',"mult-serial":'🎪'}[e.type]||'🎬'}</span>${rLabel?`<div class="mc-r-badge ${rc}">${rLabel}</div>`:''}</div>
       <div class="mc-body">
         <div class="mc-type"><span class="type-pill ${tc}" style="font-size:10px">${ti} ${tn}</span></div>
         <div class="mc-title">${esc(e.name)}</div>
@@ -187,14 +187,16 @@ function setView(v) {
 
 // ===== NAVIGATION =====
 function gotoPage(page, el, keepFilter) {
-  const isList = page==='list', isCmp = page==='compare', isStats = page==='analytics';
+  const isList = page==='list', isCmp = page==='compare', isStats = page==='analytics', isWrap = page==='wrapped';
   document.getElementById('listPage').style.display = isList?'':'none';
   document.getElementById('analyticsPage').style.display = isStats?'':'none';
   const cp = document.getElementById('comparePage');
   if (cp) cp.style.display = isCmp?'':'none';
+  const wp = document.getElementById('wrappedPage');
+  if (wp) wp.style.display = isWrap?'':'none';
   document.getElementById('yearBanner').style.display = isList?'':'none';
   document.getElementById('kpiRow').style.display = isList?'':'none';
-  document.getElementById('tbTitle').textContent = isList?'Мій список':(isCmp?'Порівняння років':'Статистика');
+  document.getElementById('tbTitle').textContent = isList?'Мій список':(isCmp?'Порівняння років':(isWrap?'Підсумки року':'Статистика'));
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   if (el) el.classList.add('active');
   // "Мій список" = повний список: скидаємо статус-фільтр і вкладку типу
@@ -204,6 +206,7 @@ function gotoPage(page, el, keepFilter) {
   }
   if (isStats) renderAnalytics();
   else if (isCmp) renderCompare();
+  else if (isWrap) renderWrapped();
   else render();
 }
 
@@ -363,6 +366,7 @@ async function fetchOMDB() {
       if (!document.getElementById('fYear').value && d.Year) document.getElementById('fYear').value=d.Year;
       if (!document.getElementById('fImdb').value && d.imdbRating&&d.imdbRating!=='N/A')
         document.getElementById('fImdb').value=parseFloat(d.imdbRating)||'';
+      fillOmdbExtra(d);
       if (!document.getElementById('fGenres').value && d.Genre)
         document.getElementById('fGenres').value=d.Genre;
       if (!document.getElementById('fDur').value && d.Runtime&&d.Runtime!=='N/A') {
@@ -381,7 +385,8 @@ function openAddModal() {
   document.getElementById('fId').value='';
   document.getElementById('modalTtl').textContent='Додати запис';
   ['fName','fYear','fDur'].forEach(id=>document.getElementById(id).value='');
-  ['fSeasons','fEpisodes','fRating','fImdb'].forEach(id=>document.getElementById(id).value='');
+  ['fSeasons','fEpisodes','fRating','fImdb','fImdbId','fPoster'].forEach(id=>document.getElementById(id).value='');
+  fPosterPreview('');
   document.getElementById('fType').value='film';
   document.getElementById('fStatus').value='plan';
   document.getElementById('fDateStart').value='';
@@ -413,6 +418,9 @@ function openEditModal(id) {
   document.getElementById('fRating').value=e.rating||'';
   document.getElementById('fFire').checked=e.fire||false;
   document.getElementById('fImdb').value=e.imdb||'';
+  document.getElementById('fImdbId').value=e.imdbId||'';
+  document.getElementById('fPoster').value=e.poster||'';
+  fPosterPreview(e.poster||'');
   document.getElementById('fGenres').value=(e.genres||[]).join(', ');
   _selectedGenres=[...(e.genres||[])];
   renderGenreDropdown();
@@ -528,6 +536,8 @@ async function saveEntry() {
     episodes:  parseInt(document.getElementById('fEpisodes').value)||null,
     rating, fire,
     imdb:      parseFloat(document.getElementById('fImdb').value)||null,
+    imdbId:    document.getElementById('fImdbId').value.trim(),
+    poster:    document.getElementById('fPoster').value,
     genres, notes:'',
     emoji: emojiMap[type]||'🎬',
     monthHours: collectMonthHours(),
@@ -602,6 +612,7 @@ fetchOMDB = async function() {
       if (!document.getElementById('fYear').value && d.Year) document.getElementById('fYear').value=d.Year;
       if (!document.getElementById('fImdb').value && d.imdbRating&&d.imdbRating!=='N/A')
         document.getElementById('fImdb').value=parseFloat(d.imdbRating)||'';
+      fillOmdbExtra(d);
       if (_selectedGenres.length===0 && d.Genre) {
         _selectedGenres = translateGenres(d.Genre);
         renderGenreDropdown();
@@ -992,3 +1003,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el) { el.addEventListener('change', () => refreshMonthRows()); el.addEventListener('input', () => refreshMonthRows()); }
   });
 });
+
+
+// ===== ПОСТЕРИ (OMDb) =====
+function fPosterPreview(url) {
+  const img = document.getElementById('fPosterPrev');
+  if (!img) return;
+  img.src = url || '';
+  img.style.display = url ? '' : 'none';
+}
+function fillOmdbExtra(d, force) {
+  const idEl = document.getElementById('fImdbId'), pEl = document.getElementById('fPoster');
+  if (d.imdbID && (force || !idEl.value)) idEl.value = d.imdbID;
+  if (d.Poster && d.Poster !== 'N/A' && (force || !pEl.value)) { pEl.value = d.Poster; fPosterPreview(d.Poster); }
+}
+async function fetchPosterById() {
+  const id = document.getElementById('fImdbId').value.trim();
+  if (!/^tt\d+$/.test(id)) { if (id) alert('IMDb ID має вигляд tt1375666 (береться з адреси сторінки на imdb.com)'); return; }
+  const key = getSettings().omdbKey || localStorage.getItem('il_omdb_key') || '';
+  if (!key) { alert('Спершу додай OMDB API ключ у Налаштуваннях'); return; }
+  try {
+    const d = await (await fetch(`https://www.omdbapi.com/?i=${id}&apikey=${key}`)).json();
+    if (d.Response === 'False') { alert('За цим IMDb ID нічого не знайдено'); return; }
+    fillOmdbExtra(d, true);
+    if (!document.getElementById('fImdb').value && d.imdbRating && d.imdbRating !== 'N/A')
+      document.getElementById('fImdb').value = parseFloat(d.imdbRating) || '';
+  } catch (e) { alert('Не вдалося звʼязатися з OMDb'); }
+}

@@ -170,13 +170,14 @@ function openSettings() {
   renderGuestList();
   renderGenreList();
   renderThemeSettings();
+  renderChangelog();
   document.getElementById('settingsModal').classList.add('open');
 }
 
 function stTab(panel, el) {
   document.querySelectorAll('.stt').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
-  ['general','genres','users','vibe','omdb','themes'].forEach(p => {
+  ['general','genres','users','vibe','omdb','themes','log'].forEach(p => {
     const el2 = document.getElementById('st' + p.charAt(0).toUpperCase() + p.slice(1));
     if (el2) el2.style.display = p === panel ? '' : 'none';
   });

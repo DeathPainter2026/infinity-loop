@@ -85,7 +85,7 @@ async function dbDeleteEntry(id) {
 
 // ─── Row converters ───
 function entryToDb(e) {
-  return {
+  const row = {
     name: e.name, type: e.type, status: e.status,
     year: e.year || null,
     date_start: e.dateStart || null,
@@ -101,6 +101,10 @@ function entryToDb(e) {
     emoji:   e.emoji   || '🎬',
     month_hours: e.monthHours ? JSON.stringify(e.monthHours) : null,
   };
+  // нові колонки додаємо лише коли є значення (щоб не ламати збереження до оновлення бази)
+  if (e.imdbId) row.imdb_id = e.imdbId;
+  if (e.poster) row.poster = e.poster;
+  return row;
 }
 function dbToEntry(r) {
   return {
@@ -121,6 +125,8 @@ function dbToEntry(r) {
     genres:    r.genres     || [],
     notes:     r.notes      || '',
     emoji:     r.emoji      || '🎬',
+    imdbId:    r.imdb_id    || '',
+    poster:    r.poster     || '',
     monthHours: r.month_hours ? JSON.parse(r.month_hours) : null,
   };
 }
