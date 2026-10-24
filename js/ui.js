@@ -255,7 +255,12 @@ function updateBadges() {
 
 // ===== KPI =====
 function updateKPI() {
-  const e = getEntries();
+  // чіпи рахуються за вибраним роком (так само, як список і банер)
+  const e = getEntries().filter(x => {
+    if (_yearFilter === 'all') return true;
+    const d = (x.dateEnd || x.dateStart || '');
+    return d ? d.startsWith(_yearFilter) : true;
+  });
   const st = calcStats(e);
   document.getElementById('kTotal').textContent = st.total;
   document.getElementById('kHours').textContent = st.hoursStr;
