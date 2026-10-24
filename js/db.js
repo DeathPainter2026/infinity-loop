@@ -14,6 +14,8 @@ function localSave(data) {
   try { localStorage.setItem(LOCAL_KEY, JSON.stringify(data)); } catch(e) {}
 }
 
+var OWNER_LOGIN = 'DeathPainter';   // власник даних (вайби бачать усі)
+
 // ─── CURRENT USER ───
 function currentUser() {
   return window._currentUser?.login || 'guest';
@@ -213,11 +215,9 @@ async function dbSaveSettings(patch) {
 // =============================================
 async function dbGetUsers() {
   if (!USE_SUPABASE || !SB) {
-    return localLoad()?.users || [{ login: 'DeathPainter', pass: 'Reckless2015', role: 'admin' }];
+    return localLoad()?.users || [];
   }
-  const { data, error } = await SB.from('users').select('*');
-  if (error) return [];
-  return data;
+  return [];   // паролі більше не завантажуються в браузер: вхід через Supabase Auth
 }
 
 async function dbAddUser(login, pass, role = 'guest') {
@@ -312,7 +312,7 @@ async function dbGetVibes() {
   try {
     const { data, error } = await SB.from('vibes')
       .select('*')
-      .eq('user_id', currentUser())
+      .eq('user_id', OWNER_LOGIN)
       .order('year', { ascending: false });
     if (error) { return local; } // Table might not exist yet
     return data.map(r => ({ id: r.id, year: r.year, title: r.title, tags: r.tags }));

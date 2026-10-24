@@ -7,20 +7,31 @@ const SESSION_KEY = 'il_session';
 const APP_VERSION = '6';
 
 // ─── LOGIN ───
+const ADMIN_LOGIN = 'DeathPainter';
+const AUTH_DOMAIN = '@infinity-loop.app';
+
 async function doLogin() {
   const login = (document.getElementById('loginUser')?.value || '').trim();
   const pass  = document.getElementById('loginPass')?.value || '';
   const err   = document.getElementById('loginError');
+  const fail = () => { if (err) err.style.display = 'block'; const p = document.getElementById('loginPass'); if (p) p.value = ''; };
+  if (!login || !pass) return fail();
 
-  const users = getUsers();
-  const user  = users.find(u => u.login === login && u.pass === pass);
-  if (!user) {
-    if (err) err.style.display = 'block';
-    document.getElementById('loginPass').value = '';
-    return;
+  let user = null;
+  if (USE_SUPABASE && SB) {
+    // Вхід через Supabase Auth: пароль перевіряє сервер, а не браузер
+    const email = login.includes('@') ? login : login.toLowerCase() + AUTH_DOMAIN;
+    const { data, error } = await SB.auth.signInWithPassword({ email, password: pass });
+    if (!error && data?.session) user = { login: ADMIN_LOGIN, role: 'admin' };
+  } else {
+    const u = getUsers().find(u => u.login === login && u.pass === pass);
+    if (u) user = { login: u.login, role: u.role };
   }
+  if (!user) return fail();
   if (err) err.style.display = 'none';
-  saveSession({ login: user.login, role: user.role });
+  window._currentUser = user;
+  saveSession(user);
+  await loadAll();   // перечитати дані вже від імені адміна (налаштування, вайби)
   startApp(user);
 }
 
@@ -30,7 +41,8 @@ function doGuestLogin() {
   startApp(g);
 }
 
-function doLogout() {
+async function doLogout() {
+  try { if (USE_SUPABASE && SB) await SB.auth.signOut(); } catch(e) {}
   localStorage.removeItem(SESSION_KEY);
   location.reload();
 }
@@ -186,7 +198,13 @@ function stTab(panel, el) {
 async function saveAdminPass() {
   const np = document.getElementById('stNewPass').value.trim();
   if (!np) return;
-  await updateAdminPass(np);
+  if (USE_SUPABASE && SB) {
+    if (np.length < 8) { alert('Пароль має бути не коротший за 8 символів'); return; }
+    const { error } = await SB.auth.updateUser({ password: np });
+    if (error) { alert('Не вдалося змінити пароль: ' + error.message); return; }
+  } else {
+    await updateAdminPass(np);
+  }
   saveSession({ login: window._currentUser.login, role: 'admin' });
   document.getElementById('stNewPass').value = '';
   alert('Пароль змінено!');
@@ -266,6 +284,10 @@ async function removeGenreUI(name) {
 }
 
 function renderGuestList() {
+  if (USE_SUPABASE && SB) {
+    document.getElementById('guestList').innerHTML = '<div style="color:var(--muted2);font-size:12px;line-height:1.5">Окремі облікові записи гостей більше не потрібні: кнопка «Гість» на екрані входу відкриває перегляд без пароля. Редагувати може лише адмін.</div>';
+    return;
+  }
   const guests = getUsers().filter(u => u.role !== 'admin');
   document.getElementById('guestList').innerHTML = guests.length
     ? guests.map(u =>
@@ -278,6 +300,7 @@ function renderGuestList() {
 }
 
 async function addGuest() {
+  if (USE_SUPABASE && SB) { alert('Облікові записи гостей вимкнено: гості заходять кнопкою «Гість» без пароля.'); return; }
   const l = document.getElementById('newLogin').value.trim();
   const p = document.getElementById('newPass').value.trim();
   if (!l || !p) { alert('Введіть логін і пароль'); return; }
@@ -319,6 +342,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Init Supabase client
   initSupabase();
 
+  // Збережена сесія адміна: відновлюємо користувача ДО завантаження даних
+  let sess = null;
+  try { sess = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e) {}
+  if (sess && sess.v === APP_VERSION && sess.role === 'admin') window._currentUser = { login: ADMIN_LOGIN, role: 'admin' };
+
   // Load all data (works for both localStorage and Supabase)
   try {
     await loadAll();
@@ -332,14 +360,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Auto-login from session
   try {
-    const sess = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
     if (sess && sess.login && sess.v === APP_VERSION) {
-      const user = sess.role === 'guest'
-        ? { login: 'Гість', role: 'guest' }
-        : getUsers().find(u => u.login === sess.login && u.role === sess.role);
-      if (user) { startApp(user); return; }
+      let user = null;
+      if (sess.role === 'guest') user = { login: 'Гість', role: 'guest' };
+      else if (USE_SUPABASE && SB) {
+        const { data } = await SB.auth.getSession();   // сесія має бути чинною на сервері
+        if (data?.session) user = { login: ADMIN_LOGIN, role: 'admin' };
+      } else user = getUsers().find(u => u.login === sess.login && u.role === sess.role);
+      if (user) { window._currentUser = user; startApp(user); return; }
     }
   } catch(e) {}
+  window._currentUser = null;
 
   // Show login
   if (ls) ls.style.display = 'flex';
