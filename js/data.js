@@ -4,6 +4,11 @@
 // =============================================
 'use strict';
 
+// ─── Захист від HTML у назвах/жанрах ───
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 // ─── Getters from cache ───
 function getEntries()  { return window._cache?.entries  || []; }
 function getGenres()   { return window._cache?.genres   || []; }

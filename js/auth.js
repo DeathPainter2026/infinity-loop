@@ -73,8 +73,82 @@ function applyTheme(name) {
     b.classList.toggle('active', (b.getAttribute('onclick')||'').includes(`'${name}'`));
   });
 }
-function setTheme(name) { applyTheme(name); }
-function setThemeLogin(name) { applyTheme(name); }
+function setThemeLogin(name) { setTheme(name); }
+
+// ─── АВТОЗМІНА ТЕМ ───
+const DEF_SCHED = {
+  enabled: true,
+  days: {1:'cthulhu', 2:'classic', 3:'cyberpunk', 4:'horror', 5:'anime', 6:'samurai', 0:'anime2'},
+  rules: [{theme:'halloween', from:'10-01', to:'10-31'}, {theme:'newyear', from:'12-20', to:'01-05'}]
+};
+function getSched() {
+  try {
+    const s = JSON.parse(localStorage.getItem('il_sched') || 'null');
+    if (s) return { ...DEF_SCHED, ...s, days: { ...DEF_SCHED.days, ...(s.days||{}) } };
+  } catch(e) {}
+  return DEF_SCHED;
+}
+function scheduledTheme(d = new Date()) {
+  const s = getSched();
+  if (!s.enabled) return null;
+  const md = String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  for (const r of s.rules) {
+    const inR = r.from <= r.to ? (md >= r.from && md <= r.to) : (md >= r.from || md <= r.to);
+    if (inR) return r.theme;
+  }
+  return s.days[d.getDay()] || null;
+}
+function initTheme() {
+  const s = scheduledTheme();
+  if (!s) { applyTheme(localStorage.getItem('il_theme') || 'cthulhu'); return; }
+  let ov = null;
+  try { ov = JSON.parse(localStorage.getItem('il_theme_ov') || 'null'); } catch(e) {}
+  if (ov && ov.sched === s) applyTheme(ov.theme);
+  else { localStorage.removeItem('il_theme_ov'); applyTheme(s); }
+}
+// Ручний вибір діє до наступної автоматичної зміни теми
+function setTheme(name) {
+  const s = scheduledTheme();
+  if (s) {
+    if (name === s) localStorage.removeItem('il_theme_ov');
+    else localStorage.setItem('il_theme_ov', JSON.stringify({ theme: name, sched: s }));
+  }
+  applyTheme(name);
+}
+function resetThemeAuto() { localStorage.removeItem('il_theme_ov'); initTheme(); }
+
+const _DAYS_UA = [[1,'Понеділок'],[2,'Вівторок'],[3,'Середа'],[4,'Четвер'],[5,'Пʼятниця'],[6,'Субота'],[0,'Неділя']];
+const _md2ui = md => md.split('-').reverse().join('.');
+function renderThemeSettings() {
+  const s = getSched();
+  const opts = document.getElementById('themeSelect').innerHTML;
+  const sel = (id, val) => `<select class="fi" id="${id}">${opts.replace(`value="${val}"`, `value="${val}" selected`)}</select>`;
+  document.getElementById('schEnabled').checked = !!s.enabled;
+  document.getElementById('schDays').innerHTML = _DAYS_UA.map(([n, lbl]) =>
+    `<div style="display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:center;margin-bottom:6px"><span style="font-size:13px">${lbl}</span>${sel('schDay'+n, s.days[n])}</div>`).join('');
+  document.getElementById('schRules').innerHTML = s.rules.map((r, i) =>
+    `<div style="display:grid;grid-template-columns:1fr 70px 70px;gap:8px;align-items:center;margin-bottom:6px">${sel('schRuleT'+i, r.theme)}<input class="fi" id="schRuleF${i}" value="${_md2ui(r.from)}" placeholder="ДД.ММ"><input class="fi" id="schRuleTo${i}" value="${_md2ui(r.to)}" placeholder="ДД.ММ"></div>`).join('');
+}
+function saveSchedule() {
+  const s = getSched();
+  const parse = v => {
+    const m = (v||'').trim().match(/^(\d{1,2})\.(\d{1,2})$/);
+    if (!m || +m[1] < 1 || +m[1] > 31 || +m[2] < 1 || +m[2] > 12) return null;
+    return m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+  };
+  const rules = [];
+  for (let i = 0; i < s.rules.length; i++) {
+    const f = parse(document.getElementById('schRuleF'+i).value), t = parse(document.getElementById('schRuleTo'+i).value);
+    if (!f || !t) { alert('Дата має бути у форматі ДД.ММ, наприклад 20.12'); return; }
+    rules.push({ theme: document.getElementById('schRuleT'+i).value, from: f, to: t });
+  }
+  const days = {};
+  _DAYS_UA.forEach(([n]) => { days[n] = document.getElementById('schDay'+n).value; });
+  localStorage.setItem('il_sched', JSON.stringify({ enabled: document.getElementById('schEnabled').checked, days, rules }));
+  localStorage.removeItem('il_theme_ov');
+  initTheme();
+  alert('Збережено!');
+}
 
 // ─── LIGHT MODE ───
 function toggleLightMode() {
@@ -95,13 +169,14 @@ function openSettings() {
   document.getElementById('stOmdbKey').value   = s.omdbKey   || '';
   renderGuestList();
   renderGenreList();
+  renderThemeSettings();
   document.getElementById('settingsModal').classList.add('open');
 }
 
 function stTab(panel, el) {
   document.querySelectorAll('.stt').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
-  ['general','genres','users','vibe','omdb'].forEach(p => {
+  ['general','genres','users','vibe','omdb','themes'].forEach(p => {
     const el2 = document.getElementById('st' + p.charAt(0).toUpperCase() + p.slice(1));
     if (el2) el2.style.display = p === panel ? '' : 'none';
   });
@@ -135,8 +210,8 @@ function renderVibeList() {
         <span style="font-size:16px;font-weight:700;color:var(--accent)">${v.year}</span>
         <button class="manage-del" onclick="deleteVibeUI(${v.year})">✕</button>
       </div>
-      <div style="font-size:12px;color:var(--text)">${v.title||'—'}</div>
-      <div style="font-size:11px;color:var(--muted2)">${v.tags||'—'}</div>
+      <div style="font-size:12px;color:var(--text)">${esc(v.title)||'—'}</div>
+      <div style="font-size:11px;color:var(--muted2)">${esc(v.tags)||'—'}</div>
     </div>`).join('');
 }
 
@@ -168,8 +243,8 @@ async function saveOmdbKey() {
 function renderGenreList() {
   document.getElementById('genreList').innerHTML = getGenres().map(g =>
     `<div class="manage-item">
-      <span class="manage-item-name">${g}</span>
-      <button class="manage-del" onclick="removeGenreUI(${JSON.stringify(g)})">✕</button>
+      <span class="manage-item-name">${esc(g)}</span>
+      <button class="manage-del" data-g="${esc(g)}" onclick="removeGenreUI(this.dataset.g)">✕</button>
     </div>`
   ).join('') || '<div style="color:var(--muted);font-size:12px">Порожньо</div>';
 }
@@ -194,8 +269,8 @@ function renderGuestList() {
   document.getElementById('guestList').innerHTML = guests.length
     ? guests.map(u =>
         `<div class="manage-item">
-          <span class="manage-item-name">👤 ${u.login}</span>
-          <button class="manage-del" onclick="removeGuestUI(${JSON.stringify(u.login)})">✕</button>
+          <span class="manage-item-name">👤 ${esc(u.login)}</span>
+          <button class="manage-del" data-l="${esc(u.login)}" onclick="removeGuestUI(this.dataset.l)">✕</button>
         </div>`
       ).join('')
     : '<div style="color:var(--muted);font-size:12px">Гостей немає</div>';
@@ -229,7 +304,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Apply theme & light
-  applyTheme(localStorage.getItem('il_theme') || 'cthulhu');
+  initTheme();
+  setInterval(() => { if (scheduledTheme()) initTheme(); }, 60000);
   if (localStorage.getItem('il_light') === '1') {
     document.body.classList.add('light-mode');
     const b = document.getElementById('lightToggleBtn');

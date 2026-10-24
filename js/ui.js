@@ -107,7 +107,7 @@ function renderTable() {
     const [sc,si,sn] = getStatusInfo(e.status);
     const rc = getRatingClass(e.rating, e.fire);
     const rLabel = e.fire ? (e.rating?`${e.rating}🔥`:'🔥') : (e.rating||'—');
-    const genres = [...(e.genres||[])].sort((a,b)=>a.localeCompare(b,'uk')).map(g=>`<span class="g-tag">${g}</span>`).join('');
+    const genres = [...(e.genres||[])].sort((a,b)=>a.localeCompare(b,'uk')).map(g=>`<span class="g-tag">${esc(g)}</span>`).join('');
     const dateD = e.dateStart
       ? (e.dateEnd&&e.dateEnd!==e.dateStart ? `${formatDate(e.dateStart)}–${formatDate(e.dateEnd)}` : formatDate(e.dateStart))
       : '—';
@@ -118,7 +118,7 @@ function renderTable() {
 
     return `<div class="t-row" onclick="${admin?`openEditModal(${e.id})`:''}">
       <div class="td td-num" data-col="num" style="width:${_cols.num}px;min-width:${_cols.num}px;max-width:${_cols.num}px">${i+1}</div>
-      <div class="td" data-col="name" style="width:${_cols.name}px;min-width:${_cols.name}px;max-width:${_cols.name}px"><div class="td-name-cell"><div class="td-name-main">${e.name}${e.private&&isAdmin()?' 🔒':''}</div></div></div>
+      <div class="td" data-col="name" style="width:${_cols.name}px;min-width:${_cols.name}px;max-width:${_cols.name}px"><div class="td-name-cell"><div class="td-name-main">${esc(e.name)}${e.private&&isAdmin()?' 🔒':''}</div></div></div>
       <div class="td" data-col="type" style="width:${_cols.type}px;min-width:${_cols.type}px;max-width:${_cols.type}px"><span class="type-pill ${tc}">${ti} ${tn}</span></div>
       <div class="td td-mono" data-col="year" style="width:${_cols.year}px;min-width:${_cols.year}px;max-width:${_cols.year}px">${e.year||'—'}</div>
       <div class="td td-mono" data-col="date" style="width:${_cols.date}px;min-width:${_cols.date}px;max-width:${_cols.date}px">${dateD}</div>
@@ -151,7 +151,7 @@ function renderCards() {
       <div class="mc-poster"><span class="mc-type-icon">${{film:'🎬',serial:'📺',"anime-serial":'⛩️',"anime-film":'🎌',mult:'🎨',"mult-serial":'🎪'}[e.type]||'🎬'}</span>${rLabel?`<div class="mc-r-badge ${rc}">${rLabel}</div>`:''}</div>
       <div class="mc-body">
         <div class="mc-type"><span class="type-pill ${tc}" style="font-size:10px">${ti} ${tn}</span></div>
-        <div class="mc-title">${e.name}</div>
+        <div class="mc-title">${esc(e.name)}</div>
         <div class="mc-meta">${e.year||''} · ${e.dur||''}</div>
       </div>
     </div>`;
@@ -823,7 +823,7 @@ function renderCalendar() {
       const rR = (isEnd  ||x.role==='single') ? '3px' : '0';
       const borderL = (!isStart && x.role!=='cont-start') ? 'border-left:none;' : '';
       const label = isStart ? `<span class="cal-bar-label">${typeEmoji[e.type]} ${e.name.slice(0,16)}${e.name.length>16?'…':''}</span>` : '';
-      return `<div class="cal-bar" style="background:${color}33;border:1px solid ${color}88;border-radius:${rL} ${rR} ${rR} ${rL};${borderL}" onclick="event.stopPropagation();openEditModal(${e.id})" title="${e.name}">${label}</div>`;
+      return `<div class="cal-bar" style="background:${color}33;border:1px solid ${color}88;border-radius:${rL} ${rR} ${rR} ${rL};${borderL}" onclick="event.stopPropagation();openEditModal(${e.id})" title="${esc(e.name)}">${label}</div>`;
     }).join('');
 
     const dotHtml = dots.slice(0,4).map(x =>
@@ -866,7 +866,7 @@ function renderNowWatching() {
       `<span style="font-size:11px;color:var(--muted2);margin-left:6px">серій: ${e.episodes}</span>` : '';
     return `<div class="now-item" onclick="openEditModal(${e.id})">
       <span class="now-emoji">${emoji}</span>
-      <span class="now-name">${e.name}</span>
+      <span class="now-name">${esc(e.name)}</span>
       ${progress}
     </div>`;
   }).join('');

@@ -72,7 +72,7 @@ function cardQuickFacts(entries) {
   let marathon='—', marScore=0;
   entries.filter(e=>e.episodes&&e.dateStart&&e.dateEnd).forEach(e=>{
     const days=Math.max(1,Math.round((new Date(e.dateEnd)-new Date(e.dateStart))/86400000)+1);
-    if(e.episodes/days>marScore){marScore=e.episodes/days;marathon=`${e.name} — ${e.episodes}ep за ${days}д`;}
+    if(e.episodes/days>marScore){marScore=e.episodes/days;marathon=`${esc(e.name)} — ${e.episodes}ep за ${days}д`;}
   });
   const diffs=done.filter(e=>e.rating&&e.imdb).map(e=>e.rating-e.imdb);
   const avgDiff=diffs.length?(+(diffs.reduce((a,b)=>a+b,0)/diffs.length).toFixed(1)):'—';
@@ -165,7 +165,7 @@ function cardTopRated(entries) {
     <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
       <div style="width:20px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted2)">${i+1}</div>
       <div style="font-size:14px">${typeEmoji[e.type]||'🎬'}</div>
-      <div style="flex:1;font-size:13px;color:var(--text)">${e.name}</div>
+      <div style="flex:1;font-size:13px;color:var(--text)">${esc(e.name)}</div>
       <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${e.fire?'#ff6b35':'var(--accent)'}">${e.rating}${e.fire?' 🔥':''}</div>
     </div>`).join('');
 
@@ -189,7 +189,7 @@ function cardRatingDivergence(entries) {
   const renderList = (list, color) => list.map(e => `
     <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
       <div style="font-size:13px">${typeEmoji[e.type]||'🎬'}</div>
-      <div style="flex:1;font-size:12px;color:var(--text)">${e.name}</div>
+      <div style="flex:1;font-size:12px;color:var(--text)">${esc(e.name)}</div>
       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2)">${e.rating} vs ${e.imdb}</div>
       <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${color}">${e.diff>0?'+':''}${e.diff.toFixed(1)}</div>
     </div>`).join('') || '<div style="color:var(--muted);font-size:12px;padding:8px 0">Немає даних</div>';
@@ -227,10 +227,10 @@ function renderAnalytics() {
       ${cardTopGenres(entries)}
       ${cardComparison(done)}
     </div>
-    <div style="margin-top:16px">${cardHoursLineChart(entries)}</div>
+    <div style="margin-top:16px">${cardHoursLineChart(getEntries().filter(e=>e.status==='done'))}</div>
     <div style="margin-top:16px">${cardTypesSummary(entries)}</div>
     <div style="margin-top:16px">${cardRatingDivergence(entries)}</div>
-    <div style="margin-top:16px">${cardMonthlyByType(entries)}</div>
+    <div style="margin-top:16px">${cardMonthlyByType(getEntries().filter(e=>e.status==='done'))}</div>
     ${cardByReleaseYear(entries)}`;
 }
 
@@ -266,7 +266,7 @@ function cardFunFacts(entries) {
   let marathon='—', marScore=0;
   entries.filter(e=>e.episodes&&e.dateStart&&e.dateEnd).forEach(e=>{
     const days=Math.max(1,Math.round((new Date(e.dateEnd)-new Date(e.dateStart))/86400000)+1);
-    if(e.episodes/days>marScore){marScore=e.episodes/days;marathon=`${e.name} — ${e.episodes}ep за ${days}д`;}
+    if(e.episodes/days>marScore){marScore=e.episodes/days;marathon=`${esc(e.name)} — ${e.episodes}ep за ${days}д`;}
   });
 
   // Avg diff my vs IMDb
@@ -414,7 +414,7 @@ function cardComparison(done) {
     const diff=+(e.rating-e.imdb).toFixed(1);
     const dc=diff>0?'var(--c-done)':diff<0?'var(--c-drop)':'var(--muted2)';
     return `<div class="cmp-row">
-      <div class="cmp-name">${e.emoji||''} ${e.name}</div>
+      <div class="cmp-name">${e.emoji||''} ${esc(e.name)}</div>
       <div class="cmp-bars-col">
         <div class="cmp-br"><div class="cmp-bl" style="color:var(--accent)">Я</div><div class="cmp-bt"><div class="cmp-bf" style="width:${e.rating*10}%;background:var(--accent)"></div></div></div>
         <div class="cmp-br"><div class="cmp-bl">IMDb</div><div class="cmp-bt"><div class="cmp-bf" style="width:${e.imdb*10}%;background:var(--muted)"></div></div></div>

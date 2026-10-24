@@ -26,11 +26,19 @@ async function dbGetEntries() {
   if (!USE_SUPABASE || !SB) {
     return (localLoad()?.entries || []).filter(e => e.user_id === currentUser() || e.user_id === 'DeathPainter');
   }
-  const { data, error } = await SB.from('entries')
-    .select('*')
-    .order('id', { ascending: false });
-  if (error) { console.error(error); return []; }
-  return data.map(dbToEntry);
+  // Supabase віддає максимум 1000 рядків за запит — тягнемо порціями
+  let all = [], from = 0;
+  while (true) {
+    const { data, error } = await SB.from('entries')
+      .select('*')
+      .order('id', { ascending: false })
+      .range(from, from + 999);
+    if (error) { console.error(error); break; }
+    all = all.concat(data);
+    if (data.length < 1000) break;
+    from += 1000;
+  }
+  return all.map(dbToEntry);
 }
 
 async function dbAddEntry(entry) {
