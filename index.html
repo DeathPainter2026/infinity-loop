@@ -144,6 +144,7 @@
         <a class="nav-item active" onclick="gotoPage('list',this)" title="Мій список"><span class="ni-icon">◈</span><span class="nav-label"> Мій список</span> <span class="ni-badge" id="badgeTotal">0</span></a>
         <a class="nav-item" onclick="gotoPage('analytics',this)" title="Статистика"><span class="ni-icon">◉</span><span class="nav-label"> Статистика</span></a>
         <a class="nav-item" onclick="gotoPage('compare',this)" title="Порівняння років"><span class="ni-icon">⇄</span><span class="nav-label"> Порівняння років</span></a>
+        <a class="nav-item" onclick="gotoPage('wrapped',this)" title="Підсумки року"><span class="ni-icon">✨</span><span class="nav-label"> Підсумки року</span></a>
       </div>
       <div class="nav-section">
         <div class="nav-sec-label">Статус</div>
@@ -287,6 +288,9 @@
       <div id="comparePage" style="display:none">
         <div id="cmpContent"></div>
       </div>
+      <div id="wrappedPage" style="display:none">
+        <div id="wrapContent"></div>
+      </div>
     </div>
   </main>
 </div>
@@ -354,6 +358,14 @@
         <div class="fg"><label class="fl">IMDb <span class="auto-lbl">← авто</span></label><input class="fi" id="fImdb" type="number" step="0.1" placeholder="7.5" style="max-width:90px"></div>
       </div>
       <div class="fg">
+        <label class="fl">IMDb ID <span class="auto-lbl">← для постера, наприклад tt1375666</span></label>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input class="fi" id="fImdbId" type="text" placeholder="tt1375666" onchange="fetchPosterById()" style="max-width:170px">
+          <input type="hidden" id="fPoster">
+          <img id="fPosterPrev" alt="" referrerpolicy="no-referrer" style="display:none;height:56px;border-radius:6px">
+        </div>
+      </div>
+      <div class="fg">
           <label class="fl">Жанри <span class="auto-lbl">← авто з OMDB або обери</span></label>
           <div class="genre-dropdown-wrap" id="genreDropWrap">
             <div class="genre-dropdown-trigger" id="genreTrigger" onclick="toggleGenreDropdown()">
@@ -391,6 +403,7 @@
         <button class="stt" onclick="stTab('vibe',this)">Вайб року</button>
         <button class="stt" onclick="stTab('omdb',this)">OMDB API</button>
         <button class="stt" onclick="stTab('themes',this)">Теми</button>
+        <button class="stt" onclick="stTab('log',this)">Історія змін</button>
       </div>
       <div id="stGeneral" class="st-panel">
         <div class="fg"><label class="fl">Пароль адміна (новий)</label><input class="fi" id="stNewPass" type="password" placeholder="Новий пароль..."></div>
@@ -430,6 +443,9 @@
           <button class="mbtn" onclick="resetThemeAuto()">Повернути авто</button>
         </div>
         <div style="font-size:11px;color:var(--muted2);margin-top:8px">Тема, змінена вручну, діє до наступної автоматичної зміни. Налаштування зберігаються в цьому браузері.</div>
+      </div>
+      <div id="stLog" class="st-panel" style="display:none">
+        <div id="changelogList" style="max-height:55vh;overflow:auto"></div>
       </div>
       <div id="stOmdb" class="st-panel" style="display:none">
         <p style="font-size:12px;color:var(--muted2);margin-bottom:10px">
@@ -485,11 +501,12 @@ function initSupabase() {
   }
 }
 </script>
-<script src="js/db.js?v=4"></script>
+<script src="js/db.js?v=5"></script>
 <script src="js/data.js?v=4"></script>
-<script src="js/auth.js?v=5"></script>
-<script src="js/ui.js?v=8"></script>
-<script src="js/analytics.js?v=8"></script>
+<script src="js/changelog.js?v=1"></script>
+<script src="js/auth.js?v=6"></script>
+<script src="js/ui.js?v=9"></script>
+<script src="js/analytics.js?v=9"></script>
 <script src="js/app.js?v=4"></script>
 <script>
 if ('serviceWorker' in navigator) {
