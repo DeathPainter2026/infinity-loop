@@ -663,11 +663,13 @@ html { overflow-x: hidden; }                 /* сторінка не «роз'�
   .an-two { grid-template-columns: minmax(0, 1fr) !important; }
   /* графік годин: читабельний, гортається вбік */
   .an-card { overflow-x: auto; }
-  .an-card svg[viewBox^="0 0 800"] { min-width: 640px; }
   /* Список: компактні рядки, видно назву, тип (значок), оцінку і статус */
   [data-col="num"], [data-col="episodes"], [data-col="genres"], [data-col="imdb"] { display: none !important; }
   [data-col="type"] { width: 44px !important; min-width: 44px !important; max-width: 44px !important; }
   [data-col="name"] { flex: 1 1 auto !important; width: auto !important; min-width: 100px !important; max-width: none !important; }
   .tp-name { display: none; }
   .type-pill { padding: 3px 6px; }
+  /* перемикач вигляду (список / картки / календар) не стискається */
+  .view-btns { flex-shrink: 0; }
+  .vb { padding: 7px 10px; }
 }
