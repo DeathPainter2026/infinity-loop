@@ -196,7 +196,7 @@ function cardRatingDivergence(entries) {
 
   return `<div class="an-card span2">
     <div class="an-ttl"><span>📊</span> Розбіжність з IMDb</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:8px">
+    <div class="an-two" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:8px">
       <div>
         <div style="font-size:11px;color:#66bb6a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">❤️ Я ціную більше ніж IMDb</div>
         ${renderList(loved, '#66bb6a')}
