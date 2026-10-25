@@ -450,7 +450,7 @@ function cardHoursLineChart(entries) {
   const n = activeMonths.length;
 
   // SVG line chart
-  const W = Math.max(300, Math.min(800, (document.getElementById('anContent')?.clientWidth || 848) - 48)), H = 120, padL = 40, padR = 20, padT = 10, padB = 28;
+  const W = 800, H = 120, padL = 40, padR = 20, padT = 10, padB = 28;
   const chartW = W - padL - padR;
   const chartH = H - padT - padB;
 
