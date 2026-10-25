@@ -635,3 +635,21 @@ body.light-mode .theme-switcher-wrap .nav-sec-label { color: #4a3820 !important;
 @media (max-width: 768px) {
   .sidebar-toggle { display: none; }
 }
+
+/* ===== MOBILE FIXES (2026-10) ===== */
+html { overflow-x: hidden; }                 /* сторінка не «роз'їжджається» вбік */
+.main-area, .content { min-width: 0; }       /* широкі графіки/таблиці не розтягують сторінку */
+@media (max-width: 768px) {
+  /* 16px у полях: iPhone більше не збільшує сторінку при натисканні на поле */
+  input, select, textarea, .fi, .sort-sel, .search-inp { font-size: 16px !important; }
+  /* нижнє меню не закриває останні рядки (з урахуванням «підборіддя» iPhone) */
+  .main-area { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+  /* форма не ховається під адресним рядком браузера */
+  .modal-box { max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); }
+  .kpi-lbl { font-size: 9px; }
+  .stt { padding: 6px 10px; font-size: 12px; }
+  .mobile-nav-item { min-width: 0; font-size: 9.5px; }
+  .mobile-nav-item span { font-size: 18px; }
+  .yb-nav { padding: 8px 12px; }
+  .cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
