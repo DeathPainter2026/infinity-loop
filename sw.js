@@ -1,5 +1,5 @@
 // ∞ Infinity Loop — Service Worker
-const CACHE = 'il-v17';
+const CACHE = 'il-v18';
 const STATIC = [
   '/',
   '/index.html',
