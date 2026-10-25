@@ -1018,15 +1018,25 @@ function fillOmdbExtra(d, force) {
   if (d.Poster && d.Poster !== 'N/A' && (force || !pEl.value)) { pEl.value = d.Poster; fPosterPreview(d.Poster); }
 }
 async function fetchPosterById() {
-  const id = document.getElementById('fImdbId').value.trim();
-  if (!/^tt\d+$/.test(id)) { if (id) alert('IMDb ID має вигляд tt1375666 (береться з адреси сторінки на imdb.com)'); return; }
+  const el = document.getElementById('fImdbId');
+  const m = (el.value || '').match(/tt\d{6,}/);   // можна вставити повне посилання з imdb.com
+  if (!m) { if (el.value.trim()) alert('Встав посилання на сторінку фільму з imdb.com або ID виду tt1375666'); return; }
+  const id = m[0]; el.value = id;
   const key = getSettings().omdbKey || localStorage.getItem('il_omdb_key') || '';
   if (!key) { alert('Спершу додай OMDB API ключ у Налаштуваннях'); return; }
   try {
     const d = await (await fetch(`https://www.omdbapi.com/?i=${id}&apikey=${key}`)).json();
     if (d.Response === 'False') { alert('За цим IMDb ID нічого не знайдено'); return; }
     fillOmdbExtra(d, true);
-    if (!document.getElementById('fImdb').value && d.imdbRating && d.imdbRating !== 'N/A')
-      document.getElementById('fImdb').value = parseFloat(d.imdbRating) || '';
+    const $ = x => document.getElementById(x);
+    if (!$('fName').value && d.Title) $('fName').value = d.Title;
+    if (!$('fYear').value && d.Year) $('fYear').value = d.Year;
+    if (!$('fImdb').value && d.imdbRating && d.imdbRating !== 'N/A') $('fImdb').value = parseFloat(d.imdbRating) || '';
+    if (_selectedGenres.length === 0 && d.Genre) { _selectedGenres = translateGenres(d.Genre); renderGenreDropdown(); }
+    if (d.Type === 'movie' && !$('fDur').value && d.Runtime && d.Runtime !== 'N/A') {
+      const mins = parseInt(d.Runtime);
+      if (mins) $('fDur').value = `${Math.floor(mins / 60)}:${String(mins % 60).padStart(2, '0')}`;
+    }
+    if (d.Type === 'series' && !$('fSeasons').value && parseInt(d.totalSeasons)) $('fSeasons').value = parseInt(d.totalSeasons);
   } catch (e) { alert('Не вдалося звʼязатися з OMDb'); }
 }
