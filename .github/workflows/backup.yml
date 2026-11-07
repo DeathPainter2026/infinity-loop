@@ -1,0 +1,43 @@
+# Щотижневий бекап бази Infinity Loop у Telegram.
+# Заодно це «будить» Supabase, тож безкоштовний проєкт не стає на паузу.
+name: Backup
+on:
+  schedule:
+    - cron: '0 6 * * 1'     # щопонеділка о 06:00 UTC (09:00 за Києвом)
+  workflow_dispatch:         # кнопка «Run workflow» для ручного запуску
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Забрати дані з Supabase і надіслати в Telegram
+        env:
+          SB_URL: https://cteduqvxfppgpfhywsgw.supabase.co
+          SB_KEY: sb_publishable_NzotSPs6eBpFMmPMoNAgBQ_YalSVyzy
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT: ${{ secrets.TG_CHAT }}
+        run: |
+          set -e
+          mkdir -p out
+          fetch_table() {   # $1 = таблиця, $2 = за чим сортувати
+            off=0; echo '[]' > out/$1.json
+            while true; do
+              curl -sf "$SB_URL/rest/v1/$1?select=*&order=$2&limit=1000&offset=$off" \
+                -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" > page.json
+              n=$(jq 'length' page.json)
+              jq -s '.[0] + .[1]' out/$1.json page.json > tmp.json && mv tmp.json out/$1.json
+              [ "$n" -lt 1000 ] && break
+              off=$((off+1000))
+            done
+          }
+          fetch_table entries id
+          fetch_table genres name
+          fetch_table vibes year
+          COUNT=$(jq 'length' out/entries.json)
+          [ "$COUNT" -gt 0 ]        # якщо записів 0 — це помилка, порожній бекап не шлемо
+          DATE=$(date +%F)
+          zip -q "infinity-loop-backup-$DATE.zip" out/*.json
+          curl -sf -F chat_id="$TG_CHAT" \
+            -F caption="Infinity Loop: бекап $DATE, записів: $COUNT" \
+            -F document=@"infinity-loop-backup-$DATE.zip" \
+            "https://api.telegram.org/bot$TG_TOKEN/sendDocument" > /dev/null
