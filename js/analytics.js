@@ -78,18 +78,18 @@ function cardQuickFacts(entries) {
   const avgDiff=diffs.length?(+(diffs.reduce((a,b)=>a+b,0)/diffs.length).toFixed(1)):'—';
   const avgDiffStr=avgDiff!=='—'?(avgDiff>=0?`+${avgDiff}`:String(avgDiff)):'—';
   const cards=[
-    {icon:'✅',val:done.length,lbl:'переглянуто',color:'var(--c-done)'},
+    {icon:'✅',val:countTitles(done),lbl:'переглянуто',color:'var(--c-done)'},
     {icon:'🔥',val:fire,lbl:'шедеврів 10🔥',color:'#ff6b35'},
     {icon:'⭐',val:avg,lbl:'середня оцінка',color:'var(--c-now)'},
     {icon:'📅',val:bestM,lbl:'топ місяць',color:'var(--accent)'},
     {icon:'🏆',val:marathon,lbl:'рекордний марафон',color:'var(--c-plan)'},
     {icon:'📊',val:avgDiffStr,lbl:'моя оцінка vs IMDb',color:'var(--c-done)'},
-    {icon:'🎬',val:entries.filter(e=>e.type==='film').length,lbl:'Фільмів',color:'#00bcd4'},
-    {icon:'📺',val:entries.filter(e=>e.type==='serial').length,lbl:'Серіалів',color:'#66bb6a'},
-    {icon:'🎌',val:entries.filter(e=>e.type==='anime-film').length,lbl:'Аніме фільмів',color:'#ce93d8'},
-    {icon:'⛩️',val:entries.filter(e=>e.type==='anime-serial').length,lbl:'Аніме серіалів',color:'#f06292'},
-    {icon:'🎨',val:entries.filter(e=>e.type==='mult').length,lbl:'Мультфільмів',color:'#ffb74d'},
-    {icon:'🎪',val:entries.filter(e=>e.type==='mult-serial').length,lbl:'Мультсеріалів',color:'#ffa726'},
+    {icon:'🎬',val:countTitles(entries.filter(e=>e.type==='film')),lbl:'Фільмів',color:'#00bcd4'},
+    {icon:'📺',val:countTitles(entries.filter(e=>e.type==='serial')),lbl:'Серіалів',color:'#66bb6a'},
+    {icon:'🎌',val:countTitles(entries.filter(e=>e.type==='anime-film')),lbl:'Аніме фільмів',color:'#ce93d8'},
+    {icon:'⛩️',val:countTitles(entries.filter(e=>e.type==='anime-serial')),lbl:'Аніме серіалів',color:'#f06292'},
+    {icon:'🎨',val:countTitles(entries.filter(e=>e.type==='mult')),lbl:'Мультфільмів',color:'#ffb74d'},
+    {icon:'🎪',val:countTitles(entries.filter(e=>e.type==='mult-serial')),lbl:'Мультсеріалів',color:'#ffa726'},
   ];
   return `<div class="an-card">
     <div class="fun-grid" style="grid-template-columns:repeat(6,1fr);gap:8px">
@@ -299,14 +299,14 @@ function cardFunFacts(entries) {
 
   // Quick stat cards
   const cards = [
-    {icon:'✅', val:done.length,   lbl:'переглянуто',         color:'var(--c-done)'},
+    {icon:'✅', val:countTitles(done),   lbl:'переглянуто',         color:'var(--c-done)'},
     {icon:'🔥', val:fire,          lbl:'шедеврів 10🔥',       color:'#ff6b35'},
     {icon:'⭐', val:avg,           lbl:'середня оцінка',      color:'var(--c-now)'},
     {icon:'📅', val:bestM,         lbl:'топ місяць',          color:'var(--accent)'},
     {icon:'🏆', val:marathon,      lbl:'рекордний марафон',   color:'var(--c-plan)'},
     {icon:'📊', val:avgDiffStr,    lbl:'моя оцінка vs IMDb',  color:'var(--c-done)'},
-    {icon:'🎬', val:entries.filter(e=>e.type==='film').length,         lbl:'фільмів',          color:'#00bcd4'},
-    {icon:'⛩️', val:entries.filter(e=>e.type.includes('anime')).length, lbl:'аніме',           color:'#f06292'},
+    {icon:'🎬', val:countTitles(entries.filter(e=>e.type==='film')),         lbl:'фільмів',          color:'#00bcd4'},
+    {icon:'⛩️', val:countTitles(entries.filter(e=>e.type.includes('anime'))), lbl:'аніме',           color:'#f06292'},
   ];
 
   return `<div class="an-card span2">
@@ -333,11 +333,11 @@ function cardFunFacts(entries) {
 // ===== DONUT: COUNT =====
 function cardDonutCount(entries) {
   const tc = typeConfig();
-  const total = entries.length;
+  const total = countTitles(entries);
   const r=65, circ=2*Math.PI*r;
   let off=0;
   const segs=tc.map(t=>{
-    const c=entries.filter(e=>e.type===t.key).length;
+    const c=countTitles(entries.filter(e=>e.type===t.key));
     const dash=total?(c/total)*circ:0;
     const s=c>0?`<circle cx="80" cy="80" r="${r}" fill="none" stroke="${t.color}" stroke-width="20" stroke-dasharray="${dash.toFixed(1)} ${(circ-dash).toFixed(1)}" stroke-dashoffset="${(-off).toFixed(1)}"/>`:'' ;
     off+=dash; return {s,c,...t};
@@ -695,20 +695,21 @@ const MONTHS_SHORT = ['Січ','Лют','Бер','Кві','Тра','Чер','Л�
 function yearStats(y) {
   const list = getEntries().filter(e => e.status === 'done' && entryYear(e) === y);
   const rated = list.filter(e => e.rating).map(e => parseInt(e.rating));
-  const hrs = Array(12).fill(0), cnt = Array(12).fill(0), types = {}, sn = {}, ep = {};
+  const hrs = Array(12).fill(0), cnt = Array(12).fill(0), types = {}, tset = {}, sn = {}, ep = {};
   Object.entries(getMonthlyHours(list)).forEach(([k, mins]) => {
     const [yy, mm] = k.split('-').map(Number);
     if (yy === y && mm >= 1 && mm <= 12) hrs[mm - 1] += mins / 60;
   });
   list.forEach(e => {
     cnt[new Date(e.dateEnd || e.dateStart).getMonth()]++;
-    types[e.type] = (types[e.type] || 0) + 1;
+    (tset[e.type] = tset[e.type] || new Set()).add(seriesKey(e));
+    types[e.type] = tset[e.type].size;
     sn[e.type] = (sn[e.type] || 0) + (parseInt(e.seasons) || 0);
     ep[e.type] = (ep[e.type] || 0) + (parseInt(e.episodes) || 0);
   });
   const maxC = Math.max(...cnt);
   return {
-    count: list.length,
+    count: countTitles(list),
     hours: hrs.reduce((a, b) => a + b, 0),
     avg: rated.length ? rated.reduce((a, b) => a + b, 0) / rated.length : 0,
     fire: list.filter(e => e.fire).length,

@@ -313,7 +313,7 @@ function updateYearBanner() {
   yearEntries.forEach(e => { totalMin += parseDurationMinutes(e.dur||''); });
   const h = Math.floor(totalMin/60), m2 = totalMin%60;
   const hoursStr = totalMin ? `${h}:${String(m2).padStart(2,'0')}г` : '0г';
-  document.getElementById('ybCount').textContent = yearEntries.length;
+  document.getElementById('ybCount').textContent = countTitles(yearEntries);
   document.getElementById('ybHours').textContent = hoursStr;
   document.getElementById('ybFire').textContent  = `${fire}🔥`;
 }

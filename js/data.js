@@ -9,6 +9,23 @@ function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// ─── Сезони одного серіалу = один серіал у підрахунках ───
+const SERIAL_TYPES = ['serial','anime-serial','mult-serial'];
+function seriesBase(name) {
+  let s = String(name || '').toLowerCase().trim();
+  s = s.replace(/^\s*(?:сезон|season)\s*\d+\s*[-–—:,.]*\s*/i, '')                          // "Сезон 12 — Назва"
+       .replace(/[\s,:;–—-]*\(?\s*(?:сезон|season|sezon)\s*\.?\s*№?\s*\d+\s*\)?\s*$/i, '')    // "Назва: Сезон 12", "(season 3)"
+       .replace(/[\s,:;–—-]*\(?\s*\d+\s*-?\s*(?:й|ий|го)?\s*(?:сезон|season)\s*\)?\s*$/i, '') // "Назва 12 сезон", "12-й сезон"
+       .replace(/[\s,:;–—-]+s\s*\d+\s*$/i, '');                                              // "Назва S12"
+  return s.trim();
+}
+function seriesKey(e) {
+  if (!SERIAL_TYPES.includes(e.type)) return 'e' + e.id;
+  if (e.imdbId) return 's:' + e.imdbId;
+  return 's:' + e.type + ':' + (seriesBase(e.name) || String(e.name || '').toLowerCase());
+}
+function countTitles(list) { return new Set(list.map(seriesKey)).size; }
+
 // ─── Getters from cache ───
 function getEntries()  { return window._cache?.entries  || []; }
 function getGenres()   { return window._cache?.genres   || []; }
@@ -47,7 +64,7 @@ function calcStats(entries) {
   const totalH = Math.floor(totalMin / 60);
   const totalM = totalMin % 60;
   return {
-    total: entries.length, avg, fire, plan, totalMin,
+    total: countTitles(entries), avg, fire, plan, totalMin,
     hoursStr: `${totalH}:${String(totalM).padStart(2,'0')}`,
     daysStr:  (totalMin / 60 / 24).toFixed(1),
   };
